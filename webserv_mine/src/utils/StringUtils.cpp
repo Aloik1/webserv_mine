@@ -1,0 +1,45 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   StringUtils.cpp                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/02/08 14:14:14 by aloiki            #+#    #+#             */
+/*   Updated: 2026/02/08 15:47:09 by aloiki           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "StringUtils.hpp"
+#include <sstream>
+
+std::vector<std::string> StringUtils::split(const std::string &s, char delim)
+{
+	std::vector<std::string> result;
+	std::stringstream ss(s);
+	std::string item;
+
+	while (std::getline(ss, item, delim))
+	{
+		result.push_back(item);
+	}
+	return result;
+}
+
+std::string StringUtils::trim(const std::string &s)
+{
+	size_t start = s.find_first_not_of(" \t\r\n");
+	size_t end = s.find_last_not_of(" \t\r\n");
+
+	if (start == std::string::npos)
+		return "";
+
+	return s.substr(start, end - start + 1);
+}
+
+std::string StringUtils::toString(size_t n)
+{
+    std::stringstream ss;
+    ss << n;
+    return ss.str();
+}

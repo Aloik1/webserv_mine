@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 13:48:24 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/08 14:49:33 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/08 16:47:47 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@ class Client {
 		int fd;
 		std::string readBuffer;
 		std::string writeBuffer;
+		bool wantWrite;
 
 		Client(int fd);
 		~Client();

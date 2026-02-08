@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:03:44 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/08 14:49:53 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/08 16:48:05 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include <unistd.h>
 
 Client::Client(int fd)
-	: fd(fd)
+	: fd(fd), wantWrite(false)
 {}
 
 Client::~Client()

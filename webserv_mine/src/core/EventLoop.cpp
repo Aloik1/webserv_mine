@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:03:59 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/08 16:05:17 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/08 16:37:43 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,14 +121,29 @@ void EventLoop::handleClientRead(int clientFd)
     HttpRequest req = parser.parse(c->readBuffer);
     
     // Check if request is complete
-    if (!req.method.empty())
+    /*if (!req.method.empty())
     {
         Router router;
         HttpResponse res = router.route(req);
 
         c->writeBuffer = res.serialize();
         c->readBuffer.clear();
+    }*/
+    if (!req.method.empty())
+    {
+        Router router;
+        HttpResponse res = router.route(req);
+
+        std::string raw = res.serialize();
+
+        std::cout << "=== ROUTER RESPONSE BEGIN ===\n";
+        std::cout << raw << "\n";
+        std::cout << "=== ROUTER RESPONSE END ===\n";
+
+        c->writeBuffer = raw;
+        c->readBuffer.clear();
     }
+
 
 }
 

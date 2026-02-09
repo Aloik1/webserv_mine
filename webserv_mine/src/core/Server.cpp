@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:03:23 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/08 14:59:57 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/09 15:21:47 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,9 +19,11 @@
 #include <fcntl.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include "../config/ConfigParser.hpp"
 
 
-Server::Server()
+Server::Server(const std::vector<ServerConfig> &configs)
+    : _configs(configs)
 {}
 
 Server::~Server()
@@ -76,20 +78,49 @@ int Server::createListeningSocket(int port)
 }
 
 
-void Server::start() {
-    int port = 8080;
+// void Server::start() {
+//     int port = 8080;
 
-    int sock = createListeningSocket(port);
-    if (sock < 0) {
-        std::cerr << "Failed to create listening socket\n";
+//     int sock = createListeningSocket(port);
+//     if (sock < 0) {
+//         std::cerr << "Failed to create listening socket\n";
+//         return;
+//     }
+
+//     _listeningSockets.push_back(sock);
+
+//     std::cout << "Server started. Waiting for connections...\n";
+
+//     EventLoop loop(_listeningSockets);
+//     loop.run();
+// }
+
+void Server::start()
+{
+    for (size_t i = 0; i < _configs.size(); i++)
+    {
+        const ServerConfig &cfg = _configs[i];
+
+        for (size_t j = 0; j < cfg.listen.size(); j++)
+        {
+            int port = atoi(cfg.listen[j].c_str());
+            int sock = createListeningSocket(port);
+
+            if (sock >= 0)
+                _listeningSockets.push_back(sock);
+        }
+    }
+
+    if (_listeningSockets.empty())
+    {
+        std::cerr << "No valid listening sockets created\n";
         return;
     }
 
-    _listeningSockets.push_back(sock);
-
     std::cout << "Server started. Waiting for connections...\n";
 
-    EventLoop loop(_listeningSockets);
+    EventLoop loop(_listeningSockets, _configs);
     loop.run();
 }
+
 

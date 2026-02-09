@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:07:37 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/09 13:32:43 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/09 16:53:18 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,33 +20,68 @@
 #include <iostream>
 
 
-Router::Router()
-    : _root("./www"), _index("index.html"), _autoindex(true)
+Router::Router(const ServerConfig &config)
+    : _config(config)
 {}
 
 HttpResponse Router::route(const HttpRequest &req)
 {
     HttpResponse res;
 
-    // Build filesystem path
-    std::string fsPath = _root + req.path;
+    // 1. Find matching location
+    const LocationConfig *loc = matchLocation(req.path);
 
-    // Check if path exists
+    // 2. Determine effective root
+    std::string root = loc ? loc->root : _config.root;
+
+    // 3. Compute the effective path (strip location prefix)
+    std::string path = req.path;
+
+    if (loc)
+    {
+        // Remove the location prefix
+        if (path.size() >= loc->path.size())
+            path = path.substr(loc->path.size());
+
+        // If nothing left, treat as "/"
+        if (path.empty())
+            path = "/";
+    }
+    // 4. Build filesystem path
+    std::string fsPath = root + path;
+
+    // 5. Stat the path
+    std::cout << "[DEBUG] fsPath = '" << fsPath << "'" << std::endl;
     struct stat st;
     if (stat(fsPath.c_str(), &st) < 0)
     {
+        // Custom error page?
+        if (_config.error_pages.count(404))
+        {
+            std::string errPath = _config.root + _config.error_pages.at(404);
+            return serveFile(errPath);
+        }
+
         res.status_code = 404;
         res.body = "404 Not Found";
         res.headers["Content-Length"] = "13";
         res.headers["Content-Type"] = "text/plain";
         return res;
     }
+    std::cout << "[DEBUG] st_mode = " << st.st_mode
+          << " isDir = " << S_ISDIR(st.st_mode) << std::endl;
 
-    // If directory
+     // 6. Directory?
     if (S_ISDIR(st.st_mode))
-        return serveDirectory(fsPath, req.path);
+    {
+        std::cout << "Entered directory if" << std::endl;
+        bool autoindex = loc ? loc->autoindex : _config.autoindex;
+        std::string index = loc ? loc->index : _config.index;
 
-    // If file
+        return serveDirectory(fsPath, path, index, autoindex);
+    }
+
+    // 7. File
     return serveFile(fsPath);
 }
 
@@ -79,21 +114,17 @@ HttpResponse Router::serveFile(const std::string &path)
     return res;
 }
 
-HttpResponse Router::serveDirectory(const std::string &path, const std::string &urlPath)
+HttpResponse Router::serveDirectory(const std::string &path, const std::string &urlPath, const std::string &index, bool autoindex)
 {
     // Try index file
-    std::string indexPath = path + "/" + _index;
+    std::string indexPath = path + "/" + index;
 
     if (FileUtils::exists(indexPath))
-    {
         return serveFile(indexPath);
-    }
 
     // Autoindex?
-    if (_autoindex)
-    {
+    if (autoindex)
         return generateAutoindex(path, urlPath);
-    }
 
     // Forbidden
     HttpResponse res;
@@ -139,11 +170,6 @@ HttpResponse Router::generateAutoindex(const std::string &path, const std::strin
             href += "/";
         href += name;
         html << "<li><a href=\"" << href << "\">" << name << "</a></li>";
-
-        // html << "<li><a href=\"" << urlPath;
-        // if (urlPath[urlPath.size() - 1] != '/')
-        //     html << "/";
-        // html << name << "\">" << name << "</a></li>";
     }
 
     html << "</ul>\n</body>\n</html>\n";
@@ -157,5 +183,30 @@ HttpResponse Router::generateAutoindex(const std::string &path, const std::strin
     return res;
 }
 
+const LocationConfig *Router::matchLocation(const std::string &path)
+{
+    const LocationConfig *best = NULL;
+    size_t bestLen = 0;
+
+    for (size_t i = 0; i < _config.locations.size(); i++)
+    {
+        const LocationConfig &loc = _config.locations[i];
+
+        // Must be a prefix match
+        if (path.compare(0, loc.path.size(), loc.path) == 0)
+        {
+            // Longest prefix wins
+            if (loc.path.size() > bestLen)
+            {
+                best = &loc;
+                bestLen = loc.path.size();
+            }
+        }
+    }
+    std::cout << "[DEBUG] matchLocation('" << path << "') → "
+        << (best ? best->path : "NONE") << std::endl;
+
+    return best;
+}
 
 

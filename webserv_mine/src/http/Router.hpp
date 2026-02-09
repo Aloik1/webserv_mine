@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 13:54:08 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/08 15:38:46 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/09 16:11:02 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,19 +16,20 @@
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
 #include "../config/ServerConfig.hpp"
+#include "../config/LocationConfig.hpp"
 #include <string>
 
 class Router {
 	public:
-		Router();
+		Router(const ServerConfig &config);
 		HttpResponse route(const HttpRequest &req);
 	private:
-		std::string _root;
-		std::string _index;
-		bool _autoindex;
+		const ServerConfig &_config;
+		const LocationConfig *matchLocation(const std::string &path);
+
 
 		HttpResponse serveFile(const std::string &path);
-		HttpResponse serveDirectory(const std::string &path, const std::string &urlPath);
+		HttpResponse serveDirectory(const std::string &path, const std::string &urlPath, const std::string &index, bool autoindex);
 		HttpResponse generateAutoindex(const std::string &path, const std::string &urlPath);
 };
 

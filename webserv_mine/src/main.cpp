@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 13:57:02 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/09 14:43:53 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/09 15:47:01 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,26 +34,57 @@
 //     }
 // }
 
+// #include "config/ConfigParser.hpp"
+// #include <iostream>
+
+// int main() {
+//     try {
+//         ConfigParser parser;
+//         std::vector<ServerConfig> servers = parser.parse("webserv.conf");
+
+//         std::cout << "Parsed " << servers.size() << " server blocks\n";
+
+//         for (size_t i = 0; i < servers.size(); i++) {
+//             std::cout << "Server " << i << ":\n";
+//             for (size_t j = 0; j < servers[i].listen.size(); j++)
+//                 std::cout << "  listen: " << servers[i].listen[j] << "\n";
+
+//             for (size_t j = 0; j < servers[i].locations.size(); j++)
+//                 std::cout << "  location: " << servers[i].locations[j].path << "\n";
+//         }
+//     }
+//     catch (const std::exception &e) {
+//         std::cerr << "Config error: " << e.what() << "\n";
+//     }
+// }
+
 #include "config/ConfigParser.hpp"
+#include "core/Server.hpp"
 #include <iostream>
 
-int main() {
-    try {
+int main()
+{
+    try
+    {
         ConfigParser parser;
         std::vector<ServerConfig> servers = parser.parse("webserv.conf");
 
         std::cout << "Parsed " << servers.size() << " server blocks\n";
-
-        for (size_t i = 0; i < servers.size(); i++) {
+        for (size_t i = 0; i < servers.size(); i++)
+        {
             std::cout << "Server " << i << ":\n";
             for (size_t j = 0; j < servers[i].listen.size(); j++)
                 std::cout << "  listen: " << servers[i].listen[j] << "\n";
-
             for (size_t j = 0; j < servers[i].locations.size(); j++)
                 std::cout << "  location: " << servers[i].locations[j].path << "\n";
         }
+
+        // Start the server using the parsed config
+        Server server(servers);
+        server.start();
     }
-    catch (const std::exception &e) {
+    catch (const std::exception &e)
+    {
         std::cerr << "Config error: " << e.what() << "\n";
     }
 }

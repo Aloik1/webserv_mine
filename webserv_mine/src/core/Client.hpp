@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 13:48:24 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/08 16:47:47 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/09 15:27:08 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #define CLIENT_HPP
 
 #include <string>
+#include "../config/ServerConfig.hpp"
 
 class Client {
 	public:
@@ -22,7 +23,9 @@ class Client {
 		std::string writeBuffer;
 		bool wantWrite;
 
-		Client(int fd);
+		ServerConfig config;
+
+		Client(int fd, const ServerConfig &conf);
 		~Client();
 
 };

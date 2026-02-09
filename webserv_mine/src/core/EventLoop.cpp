@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:03:59 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/09 13:41:26 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/09 15:36:41 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,8 +23,8 @@
 #include <errno.h>
 #include <string.h>
 
-EventLoop::EventLoop(const std::vector<int> &listeningSockets)
-    : _listeningSockets(listeningSockets)
+EventLoop::EventLoop(const std::vector<int> &listeningSockets, const std::vector<ServerConfig> &configs)
+    : _listeningSockets(listeningSockets), _configs(configs)
 {}
 
 EventLoop::~EventLoop()
@@ -103,6 +103,20 @@ void EventLoop::run()
     }
 }
 
+// void EventLoop::acceptNewClient(int listenFd)
+// {
+//     int clientFd = accept(listenFd, NULL, NULL);
+//     if (clientFd < 0)
+//         return;
+
+//     // Make non-blocking
+//     fcntl(clientFd, F_SETFL, O_NONBLOCK);
+
+//     _clients[clientFd] = new Client(clientFd);
+
+//     std::cout << "New client connected: " << clientFd << "\n";
+// }
+
 void EventLoop::acceptNewClient(int listenFd)
 {
     int clientFd = accept(listenFd, NULL, NULL);
@@ -112,10 +126,15 @@ void EventLoop::acceptNewClient(int listenFd)
     // Make non-blocking
     fcntl(clientFd, F_SETFL, O_NONBLOCK);
 
-    _clients[clientFd] = new Client(clientFd);
+    // For now, always use the first server block.
+    // Later we will match by listenFd for virtual hosts.
+    const ServerConfig &conf = _configs[0];
+
+    _clients[clientFd] = new Client(clientFd, conf);
 
     std::cout << "New client connected: " << clientFd << "\n";
 }
+
 
 void EventLoop::handleClientRead(int clientFd) 
 {
@@ -145,7 +164,7 @@ void EventLoop::handleClientRead(int clientFd)
     }*/
     if (!req.method.empty())
     {
-        Router router;
+        Router router(c->config);
         HttpResponse res = router.route(req);
 
         std::string raw = res.serialize();

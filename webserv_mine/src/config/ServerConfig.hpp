@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 13:50:53 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/09 14:48:38 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/09 15:52:35 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,9 @@ struct ServerConfig {
     std::vector<LocationConfig> locations;
 
     ServerConfig()
-        : autoindex(false), client_max_body_size(0) {}
+        : server_name(""), root("./www"), index("index.html"), autoindex(false), client_max_body_size(0)
+    {}
+
 };
 
 #endif

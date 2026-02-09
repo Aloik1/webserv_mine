@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 13:49:49 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/08 13:50:06 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/09 14:32:17 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,8 @@
 
 #include <string>
 #include <vector>
-
-class ServerConfig; // forward declaration
+#include "Tokenizer.hpp"
+#include "ServerConfig.hpp"
 
 class ConfigParser {
 	public:
@@ -24,6 +24,23 @@ class ConfigParser {
 		~ConfigParser();
 
 		std::vector<ServerConfig> parse(const std::string &path);
+
+	private:
+		std::vector<Token> _tokens;
+		size_t _pos;
+
+		// Token helpers
+		const Token &peek();
+		const Token &get();
+		bool match(TokenType type);
+		void expect(TokenType type, const std::string &msg);
+
+		// Parsing functions
+		ServerConfig parseServerBlock();
+		void parseServerDirective(ServerConfig &srv);
+
+		LocationConfig parseLocationBlock();
+		void parseLocationDirective(LocationConfig &loc);
 };
 
 #endif

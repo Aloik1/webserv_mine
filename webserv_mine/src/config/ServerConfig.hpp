@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 13:50:53 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/08 14:35:55 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/09 14:48:38 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,10 +20,19 @@
 #include "LocationConfig.hpp"
 
 struct ServerConfig {
-	std::vector<std::string> listen;
-	std::map<int, std::string> error_pages;
-	size_t client_max_body_size;
-	std::vector<LocationConfig> locations;
+    std::vector<std::string> listen;
+    std::string server_name;
+    std::string root;
+    std::string index;
+    bool autoindex;
+
+    std::map<int, std::string> error_pages;
+    size_t client_max_body_size;
+
+    std::vector<LocationConfig> locations;
+
+    ServerConfig()
+        : autoindex(false), client_max_body_size(0) {}
 };
 
 #endif

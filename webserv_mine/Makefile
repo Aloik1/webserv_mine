@@ -10,7 +10,7 @@ INCLUDE_DIR = include
 INCLUDE = -I$(INCLUDE_DIR)
 
 SRCS =  $(SRC_DIR)/main.cpp 			$(SRC_DIR)/cgi/CgiHandler.cpp \
-	$(SRC_DIR)/config/ConfigParser.cpp \
+	$(SRC_DIR)/config/ConfigParser.cpp	$(SRC_DIR)/config/Tokenizer.cpp \
 	$(SRC_DIR)/core/Client.cpp 		$(SRC_DIR)/core/EventLoop.cpp \
 	$(SRC_DIR)/core/Server.cpp 		$(SRC_DIR)/http/HttpRequest.cpp \
 	$(SRC_DIR)/http/HttpResponse.cpp	$(SRC_DIR)/http/RequestParser.cpp \

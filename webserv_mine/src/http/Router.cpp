@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:07:37 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/08 15:48:46 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/09 13:32:43 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,19 +119,34 @@ HttpResponse Router::generateAutoindex(const std::string &path, const std::strin
     }
 
     std::stringstream html;
-    html << "<html><body><h1>Index of " << urlPath << "</h1><ul>";
+    html << "<!DOCTYPE html>\n"
+     << "<html>\n<head>\n"
+     << "<meta charset=\"utf-8\">\n"
+     << "<title>Index of " << urlPath << "</title>\n"
+     << "</head>\n<body>\n";
+
+    html << "<h1>Index of " << urlPath << "</h1>\n";
+    html << "<ul>\n";
 
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL)
     {
         std::string name = entry->d_name;
-        html << "<li><a href=\"" << urlPath;
-        if (urlPath[urlPath.size() - 1] != '/')
-            html << "/";
-        html << name << "\">" << name << "</a></li>";
+        if (name == "." || name == "..")
+            continue;
+        std::string href = urlPath;
+        if (href.empty() || href[href.size() - 1] != '/')
+            href += "/";
+        href += name;
+        html << "<li><a href=\"" << href << "\">" << name << "</a></li>";
+
+        // html << "<li><a href=\"" << urlPath;
+        // if (urlPath[urlPath.size() - 1] != '/')
+        //     html << "/";
+        // html << name << "\">" << name << "</a></li>";
     }
 
-    html << "</ul></body></html>";
+    html << "</ul>\n</body>\n</html>\n";
     closedir(dir);
 
     res.status_code = 200;

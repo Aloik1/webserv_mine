@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:03:59 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/08 17:02:46 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/09 13:41:26 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -179,33 +179,48 @@ void EventLoop::handleClientWrite(int clientFd)
         clientFd,
         c->writeBuffer.c_str(),
         c->writeBuffer.size(),
-        #ifdef MSG_NOSIGNAL
-            MSG_NOSIGNAL          // avoid SIGPIPE on Linux
-        #else
-            0
-        #endif
-
+#ifdef MSG_NOSIGNAL
+    MSG_NOSIGNAL          // avoid SIGPIPE on Linux
+#else
+    0
+#endif
     );
 
-    std::cout << "[WRITE] send() = " << bytes
-              << " errno = " << errno
-              << " (" << strerror(errno) << ")\n";
+    // std::cout << "[WRITE] send() = " << bytes
+    //           << " errno = " << errno
+    //           << " (" << strerror(errno) << ")\n";
+    
+    if (bytes < 0) 
+    {
+        std::cout << "[WRITE] send() failed errno = " << errno
+                  << " (" << strerror(errno) << ")\n";
 
-    if (bytes < 0) {
-        if (errno == EAGAIN || errno == EWOULDBLOCK) {
-            // socket not ready yet, try again on next POLLOUT
-            return;
-        }
-        // real error, drop client
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+            return; // try again later
+
         removeClient(clientFd);
         return;
     }
+
+    // Success — print only the bytes sent
+    std::cout << "[WRITE] send() = " << bytes << "\n";
 
     if (bytes == 0) {
         // peer closed, nothing more to do
         removeClient(clientFd);
         return;
     }
+    // if (bytes < 0) {
+    //     if (errno == EAGAIN || errno == EWOULDBLOCK) {
+    //         // socket not ready yet, try again on next POLLOUT
+    //         return;
+    //     }
+    //     // real error, drop client
+    //     removeClient(clientFd);
+    //     return;
+    // }
+
+    
 
     c->writeBuffer.erase(0, bytes);
 

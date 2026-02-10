@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:07:37 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/10 14:47:47 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/10 15:10:04 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 #include <sstream>
 #include <iostream>
 #include <cerrno>
-
+#include <cstdio>
 
 Router::Router(const ServerConfig &config)
     : _config(config)
@@ -102,6 +102,10 @@ HttpResponse Router::route(const HttpRequest &req)
     }
     std::cout << "[DEBUG] st_mode = " << st.st_mode
           << " isDir = " << S_ISDIR(st.st_mode) << std::endl;
+    
+    if (req.method == "DELETE")
+        return handleDelete(fsPath);
+
 
      // 6. Directory?
     if (S_ISDIR(st.st_mode))
@@ -251,4 +255,43 @@ const LocationConfig *Router::matchLocation(const std::string &path)
     return best;
 }
 
+HttpResponse Router::handleDelete(const std::string &fsPath)
+{
+    HttpResponse res;
+    struct stat st;
 
+    if (stat(fsPath.c_str(), &st) < 0)
+    {
+        // File does not exist
+        res.status_code = 404;
+        res.body = "404 Not Found";
+        res.headers["Content-Length"] = StringUtils::toString(res.body.size());
+        res.headers["Content-Type"] = "text/plain";
+        return res;
+    }
+
+    if (S_ISDIR(st.st_mode))
+    {
+        // We don't allow deleting directories
+        res.status_code = 403;
+        res.body = "403 Forbidden";
+        res.headers["Content-Length"] = StringUtils::toString(res.body.size());
+        res.headers["Content-Type"] = "text/plain";
+        return res;
+    }
+
+    if (std::remove(fsPath.c_str()) != 0)
+    {
+        // Failed to delete (permissions, etc.)
+        res.status_code = 500;
+        res.body = "500 Internal Server Error";
+        res.headers["Content-Length"] = StringUtils::toString(res.body.size());
+        res.headers["Content-Type"] = "text/plain";
+        return res;
+    }
+
+    // Success: 204 No Content
+    res.status_code = 204;
+    res.headers["Content-Length"] = "0";
+    return res;
+}

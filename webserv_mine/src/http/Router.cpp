@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:07:37 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/09 16:53:18 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/10 14:47:47 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <dirent.h>
 #include <sstream>
 #include <iostream>
+#include <cerrno>
 
 
 Router::Router(const ServerConfig &config)
@@ -31,6 +32,37 @@ HttpResponse Router::route(const HttpRequest &req)
     // 1. Find matching location
     const LocationConfig *loc = matchLocation(req.path);
 
+    // 1.1 Enforce allowed methods
+    if (loc && !loc->methods.empty())
+    {
+        bool allowed = false;
+        for (size_t i = 0; i < loc->methods.size(); ++i)
+        {
+            if (loc->methods[i] == req.method)
+            {
+                allowed = true;
+                break;
+            }
+        }
+        if (!allowed)
+        {
+            res.status_code = 405;
+            res.body = "405 Method Not Allowed";
+            res.headers["Content-Length"] = StringUtils::toString(res.body.size());
+            res.headers["Content-Type"] = "text/plain";
+
+            // Build Allow header
+            std::string allow;
+            for (size_t i = 0; i < loc->methods.size(); ++i)
+            {
+                if (i > 0) allow += ", ";
+                allow += loc->methods[i];
+            }
+            res.headers["Allow"] = allow;
+
+            return res;
+        }
+    }
     // 2. Determine effective root
     std::string root = loc ? loc->root : _config.root;
 
@@ -76,7 +108,7 @@ HttpResponse Router::route(const HttpRequest &req)
     {
         std::cout << "Entered directory if" << std::endl;
         bool autoindex = loc ? loc->autoindex : _config.autoindex;
-        std::string index = loc ? loc->index : _config.index;
+        std::string index = (loc && !loc->index.empty()) ? loc->index : _config.index;
 
         return serveDirectory(fsPath, path, index, autoindex);
     }
@@ -119,8 +151,18 @@ HttpResponse Router::serveDirectory(const std::string &path, const std::string &
     // Try index file
     std::string indexPath = path + "/" + index;
 
+    //
+    std::cout << "indexPath = '" << indexPath << "'" << std::endl;
+    struct stat st2;
+    int r = stat(indexPath.c_str(), &st2);
+    std::cout << "stat(indexPath) = " << r << " errno=" << errno << std::endl;
+    //
+
     if (FileUtils::exists(indexPath))
+    {
+        std::cout << "Its a FILE" << std::endl;
         return serveFile(indexPath);
+    }
 
     // Autoindex?
     if (autoindex)

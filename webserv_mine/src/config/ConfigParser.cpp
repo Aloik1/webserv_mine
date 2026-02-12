@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:05:01 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/10 14:46:25 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/12 14:41:45 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -184,6 +184,11 @@ void ConfigParser::parseLocationDirective(LocationConfig &loc)
             loc.methods.push_back(get().value);
 
         expect(TOKEN_SEMICOLON, "Expected ';' after allow_methods");
+    }
+    else if (key == "upload_store")
+    {
+        loc.upload_store = get().value;
+        expect(TOKEN_SEMICOLON, "Expected ';' after upload_store");
     }
     else
         throw std::runtime_error("Unknown location directive: " + key);

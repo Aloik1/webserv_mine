@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:07:37 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/10 15:10:04 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/12 17:13:41 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,8 @@ Router::Router(const ServerConfig &config)
 HttpResponse Router::route(const HttpRequest &req)
 {
     HttpResponse res;
+    std::cout << "[DEBUG] req.method = '" << req.method << "'" << std::endl;
+
 
     // 1. Find matching location
     const LocationConfig *loc = matchLocation(req.path);
@@ -82,6 +84,19 @@ HttpResponse Router::route(const HttpRequest &req)
     // 4. Build filesystem path
     std::string fsPath = root + path;
 
+    // DELETE handling
+    if (req.method == "DELETE")
+    {
+        std::cout << "[DEBUG] = Entering DELETE handling" << std::endl;
+        return handleDelete(fsPath);
+    }
+    // POST handling
+    if (req.method == "POST")
+    {
+        std::cout << "[DEBUG] = Entering POST handling" << std::endl;
+        return handlePost(req, loc);
+    }
+    
     // 5. Stat the path
     std::cout << "[DEBUG] fsPath = '" << fsPath << "'" << std::endl;
     struct stat st;
@@ -102,11 +117,6 @@ HttpResponse Router::route(const HttpRequest &req)
     }
     std::cout << "[DEBUG] st_mode = " << st.st_mode
           << " isDir = " << S_ISDIR(st.st_mode) << std::endl;
-    
-    if (req.method == "DELETE")
-        return handleDelete(fsPath);
-
-
      // 6. Directory?
     if (S_ISDIR(st.st_mode))
     {
@@ -293,5 +303,50 @@ HttpResponse Router::handleDelete(const std::string &fsPath)
     // Success: 204 No Content
     res.status_code = 204;
     res.headers["Content-Length"] = "0";
+    return res;
+}
+
+HttpResponse Router::handlePost(const HttpRequest &req, const LocationConfig *loc)
+{
+    HttpResponse res;
+
+    // 1. upload_store must be configured
+    if (loc->upload_store.empty())
+    {
+        res.status_code = 403;
+        res.body = "403 Forbidden (upload_store not set)";
+        res.headers["Content-Length"] = StringUtils::toString(res.body.size());
+        res.headers["Content-Type"] = "text/plain";
+        return res;
+    }
+
+    // 2. Ensure upload directory exists
+    std::string dir = loc->upload_store;
+    if (dir[dir.size() - 1] != '/')
+        dir += "/";
+
+    // 3. Generate a filename (simple version)
+    // Example: upload_1700000000.txt
+    std::string filename = "upload_" + StringUtils::toString(time(NULL)) + ".txt";
+    std::string fullpath = dir + filename;
+
+    // 4. Write body to file
+    FILE *f = fopen(fullpath.c_str(), "wb");
+    if (!f)
+    {
+        res.status_code = 500;
+        res.body = "500 Internal Server Error (cannot open file)";
+        res.headers["Content-Length"] = StringUtils::toString(res.body.size());
+        res.headers["Content-Type"] = "text/plain";
+        return res;
+    }
+
+    fwrite(req.body.c_str(), 1, req.body.size(), f);
+    fclose(f);
+
+    // 5. Return 201 Created
+    res.status_code = 201;
+    res.headers["Content-Length"] = "0";
+    res.headers["Location"] = filename; // relative path
     return res;
 }

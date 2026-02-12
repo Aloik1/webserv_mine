@@ -1,26 +1,23 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   RequestParser.hpp                                  :+:      :+:    :+:   */
+/*   HttpException.hpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/02/08 13:53:34 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/12 16:04:04 by aloiki           ###   ########.fr       */
+/*   Created: 2026/02/12 16:01:09 by aloiki            #+#    #+#             */
+/*   Updated: 2026/02/12 16:01:25 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef REQUEST_PARSER_HPP
-#define REQUEST_PARSER_HPP
-
-#include "HttpRequest.hpp"
-#include "../config/ServerConfig.hpp"
+#pragma once
 #include <string>
 
-class RequestParser {
-	public:
-		RequestParser();
-		HttpRequest parse(const std::string &raw, const ServerConfig &config);
-};
+class HttpException {
+public:
+    int code;
+    std::string message;
 
-#endif
+    HttpException(int c, const std::string &msg)
+        : code(c), message(msg) {}
+};

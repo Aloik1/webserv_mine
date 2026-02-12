@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 13:49:07 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/09 15:44:44 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/12 15:31:11 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,12 +23,12 @@ class EventLoop {
 	public:
 		EventLoop(const std::vector<int> &listeningSockets, const std::vector<ServerConfig> &configs);
 		~EventLoop();
-
 		void run();
 	private:
 		std::vector<int> _listeningSockets;
 		std::vector<ServerConfig> _configs;
 		std::map<int, Client*> _clients;
+		std::map<int, ServerConfig> _socketToConfig;
 
 		void acceptNewClient(int listenFd);
 		void handleClientRead(int clientFd);

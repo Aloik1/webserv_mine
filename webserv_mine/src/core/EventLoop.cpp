@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:03:59 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/10 14:58:59 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/12 17:11:59 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 #include "../http/RequestParser.hpp"
 #include "../http/Router.hpp"
 #include "Client.hpp"
+#include "../utils/StringUtils.hpp"
+#include "../http/HttpException.hpp"
 #include <iostream>
 #include <unistd.h>
 #include <fcntl.h>
@@ -25,7 +27,15 @@
 
 EventLoop::EventLoop(const std::vector<int> &listeningSockets, const std::vector<ServerConfig> &configs)
     : _listeningSockets(listeningSockets), _configs(configs)
-{}
+{
+    // Map each listening socket to its corresponding server config
+    for (size_t i = 0; i < listeningSockets.size(); i++)
+    {
+        int sock = listeningSockets[i];
+        _socketToConfig[sock] = configs[i];
+    }
+}
+
 
 EventLoop::~EventLoop()
 {
@@ -112,10 +122,10 @@ void EventLoop::acceptNewClient(int listenFd)
     // Make non-blocking
     fcntl(clientFd, F_SETFL, O_NONBLOCK);
 
-    // For now, always use the first server block.
-    // Later we will match by listenFd for virtual hosts.
-    const ServerConfig &conf = _configs[0];
+    // Get the correct server config for this listening socket
+    const ServerConfig &conf = _socketToConfig[listenFd];
 
+    // Create client with the correct config
     _clients[clientFd] = new Client(clientFd, conf);
 
     std::cout << "New client connected: " << clientFd << "\n";
@@ -135,26 +145,46 @@ void EventLoop::handleClientRead(int clientFd)
     Client *c = _clients[clientFd];
     c->readBuffer.append(buffer, bytes);
 
-    // Try to parse request
+    // Parse request with correct config
     RequestParser parser;
-    HttpRequest req = parser.parse(c->readBuffer);
-    
-    // Check if request is complete
-    if (!req.method.empty())
+    HttpRequest req;
+
+    try
     {
-        Router router(c->config);
-        HttpResponse res = router.route(req);
-
-        std::string raw = res.serialize();
-
-        std::cout << "=== ROUTER RESPONSE BEGIN ===\n";
-        std::cout << raw << "\n";
-        std::cout << "=== ROUTER RESPONSE END ===\n";
-
-        c->writeBuffer = raw;
-        c->readBuffer.clear();
-        c->wantWrite = true;
+        req = parser.parse(c->readBuffer, c->config);
     }
+    catch (const HttpException &e)
+    {
+        // Build error response (e.g., 413 Payload Too Large)
+        HttpResponse res;
+        res.status_code = e.code;
+        res.body = e.message;
+        res.headers["Content-Length"] = StringUtils::toString(res.body.size());
+        res.headers["Content-Type"] = "text/plain";
+
+        c->writeBuffer = res.serialize();
+        c->wantWrite = true;
+        c->readBuffer.clear();
+        return;
+    }
+    
+    // Request incomplete → wait for more data
+    if (req.method.empty())
+        return;
+
+    // Route using correct config
+    Router router(c->config);
+    HttpResponse res = router.route(req);
+
+    std::string raw = res.serialize();
+
+    std::cout << "=== ROUTER RESPONSE BEGIN ===\n";
+    std::cout << raw << "\n";
+    std::cout << "=== ROUTER RESPONSE END ===\n";
+
+    c->writeBuffer = raw;
+    c->wantWrite = true;
+    c->readBuffer.clear();
 }
 // ...
 
@@ -176,17 +206,13 @@ void EventLoop::handleClientWrite(int clientFd)
         0
     #endif
     );
-    if (bytes < 0) 
+    if (bytes <= 0)
     {
-        std::cout << "[WRITE] send() failed errno = " << errno
-                  << " (" << strerror(errno) << ")\n";
-
-        if (errno == EAGAIN || errno == EWOULDBLOCK)
-            return; // try again later
-
+        std::cout << "[WRITE] send() failed or peer closed\n";
         removeClient(clientFd);
         return;
     }
+
 
     // Success — print only the bytes sent
     std::cout << "[WRITE] send() = " << bytes << "\n";
@@ -198,9 +224,9 @@ void EventLoop::handleClientWrite(int clientFd)
     }
     c->writeBuffer.erase(0, bytes);
     if (c->writeBuffer.empty()) {
-        std::cout << "[WRITE] all data sent, closing connection\n";
+        std::cout << "[WRITE] all data sent\n";
         c->wantWrite = false;
-        removeClient(clientFd);
+        // removeClient(clientFd);
     }
 }
 

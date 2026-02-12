@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:03:23 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/09 15:21:47 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/12 15:24:54 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,24 +76,6 @@ int Server::createListeningSocket(int port)
     std::cout << "Listening on port " << port << "...\n";
     return sockfd;
 }
-
-
-// void Server::start() {
-//     int port = 8080;
-
-//     int sock = createListeningSocket(port);
-//     if (sock < 0) {
-//         std::cerr << "Failed to create listening socket\n";
-//         return;
-//     }
-
-//     _listeningSockets.push_back(sock);
-
-//     std::cout << "Server started. Waiting for connections...\n";
-
-//     EventLoop loop(_listeningSockets);
-//     loop.run();
-// }
 
 void Server::start()
 {

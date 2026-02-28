@@ -6,10 +6,11 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:05:01 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/12 14:41:45 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/28 17:03:16 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <iostream>
 #include "ConfigParser.hpp"
 #include "ServerConfig.hpp"
 #include "LocationConfig.hpp"
@@ -108,11 +109,56 @@ void ConfigParser::parseServerDirective(ServerConfig &srv)
         srv.error_pages[code] = path;
         expect(TOKEN_SEMICOLON, "Expected ';' after error_page");
     }
-    else if (key == "client_max_body_size")
+        else if (key == "client_max_body_size")
     {
-        srv.client_max_body_size = StringUtils::toSizeT(get().value);
+        // First token: number or number+suffix
+        Token t1 = get();
+        std::string val = t1.value;
+
+        // DEBUG
+        std::cout << "[DEBUG] token1: '" << val << "' type=" << t1.type << "\n";
+
+        // Check if next token is a suffix (K/M/G)
+        if (peek().type == TOKEN_IDENT &&
+            (peek().value == "K" || peek().value == "k" ||
+            peek().value == "M" || peek().value == "m" ||
+            peek().value == "G" || peek().value == "g"))
+        {
+            Token suffix = get();
+            val += suffix.value; // append suffix
+            std::cout << "[DEBUG] token2 (suffix): '" << suffix.value << "'\n";
+        }
+
+        // Now val is guaranteed to be like "100", "100M", "100K", etc.
+        std::cout << "[DEBUG] combined value: '" << val << "'\n";
+
+        // Detect suffix
+        size_t multiplier = 1;
+        char last = val[val.size() - 1];
+
+        if (last == 'K' || last == 'k') {
+            multiplier = 1024;
+            val = val.substr(0, val.size() - 1);
+        }
+        else if (last == 'M' || last == 'm') {
+            multiplier = 1024 * 1024;
+            val = val.substr(0, val.size() - 1);
+        }
+        else if (last == 'G' || last == 'g') {
+            multiplier = 1024 * 1024 * 1024;
+            val = val.substr(0, val.size() - 1);
+        }
+
+        std::cout << "[DEBUG] numeric part: '" << val << "'\n";
+
+        srv.client_max_body_size = StringUtils::toSizeT(val) * multiplier;
+
+        std::cout << "[DEBUG] final client_max_body_size = "
+                << srv.client_max_body_size << "\n";
+
         expect(TOKEN_SEMICOLON, "Expected ';' after client_max_body_size");
     }
+
     else if (key == "location")
     {
         LocationConfig loc = parseLocationBlock();
@@ -189,6 +235,16 @@ void ConfigParser::parseLocationDirective(LocationConfig &loc)
     {
         loc.upload_store = get().value;
         expect(TOKEN_SEMICOLON, "Expected ';' after upload_store");
+    }
+    else if (key == "cgi_extension")
+    {
+        loc.cgi_extension = get().value;
+        expect(TOKEN_SEMICOLON, "Expected ';' after cgi_extension");
+    }
+    else if (key == "cgi_path")
+    {
+        loc.cgi_path = get().value;
+        expect(TOKEN_SEMICOLON, "Expected ';' after cgi_path");
     }
     else
         throw std::runtime_error("Unknown location directive: " + key);

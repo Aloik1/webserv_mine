@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 13:52:19 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/08 13:52:32 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/28 15:43:57 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,9 @@ class HttpRequest {
 		std::string version;
 		std::map<std::string, std::string> headers;
 		std::string body;
+		std::string cgi_path;
+		std::string cgi_extension;
+
 
 		HttpRequest();
 };

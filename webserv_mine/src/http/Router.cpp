@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:07:37 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/12 17:13:41 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/28 17:16:29 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,14 @@
 #include "../utils/FileUtils.hpp"
 #include "../utils/StringUtils.hpp"
 #include "../utils/MimeTypes.hpp"
+#include "../cgi/CgiHandler.hpp"
 #include <sys/stat.h>
 #include <dirent.h>
 #include <sstream>
 #include <iostream>
 #include <cerrno>
 #include <cstdio>
+#include <cstdlib>
 
 Router::Router(const ServerConfig &config)
     : _config(config)
@@ -28,11 +30,15 @@ Router::Router(const ServerConfig &config)
 HttpResponse Router::route(const HttpRequest &req)
 {
     HttpResponse res;
+    std::cout << "[DEBUG] route(): req.path = '" << req.path << "'\n";
     std::cout << "[DEBUG] req.method = '" << req.method << "'" << std::endl;
 
 
-    // 1. Find matching location
+    // 1. Find matching location    
     const LocationConfig *loc = matchLocation(req.path);
+    std::cout << "[DEBUG] matchLocation('" << req.path << "') → "
+          << (loc ? loc->path : "NULL") << "\n";
+
 
     // 1.1 Enforce allowed methods
     if (loc && !loc->methods.empty())
@@ -90,12 +96,36 @@ HttpResponse Router::route(const HttpRequest &req)
         std::cout << "[DEBUG] = Entering DELETE handling" << std::endl;
         return handleDelete(fsPath);
     }
-    // POST handling
+
+    // CGI always has priority (GET or POST)
+    if (!loc->cgi_path.empty() && !loc->cgi_extension.empty()) {
+        std::cout << "[DEBUG] Entering CGI handling\n";
+
+        CgiHandler cgi;
+        std::string output = cgi.execute(fsPath, req, loc->cgi_path);
+
+        return parseCgiResponse(output);
+    }
+
+    // POST upload handling (only if upload_store is set)
     if (req.method == "POST")
     {
-        std::cout << "[DEBUG] = Entering POST handling" << std::endl;
+        std::cout << "[DEBUG] Entering POST upload handling\n";
+
+        if (loc->upload_store.empty()) {
+            std::cout << "[DEBUG] POST rejected: upload_store not set\n";
+
+            HttpResponse res;
+            res.status_code = 403;
+            res.body = "POST not allowed here (upload_store not set)";
+            res.headers["Content-Length"] = StringUtils::toString(res.body.size());
+            res.headers["Content-Type"] = "text/plain";
+            return res;
+        }
         return handlePost(req, loc);
     }
+
+
     
     // 5. Stat the path
     std::cout << "[DEBUG] fsPath = '" << fsPath << "'" << std::endl;
@@ -127,6 +157,21 @@ HttpResponse Router::route(const HttpRequest &req)
         return serveDirectory(fsPath, path, index, autoindex);
     }
 
+    // --- CGI detection ---
+    if (loc && !loc->cgi_extension.empty() && !loc->cgi_path.empty()) {
+        // Check extension
+        size_t dot = fsPath.find_last_of('.');
+        std::string ext = (dot != std::string::npos) ? fsPath.substr(dot) : "";
+
+        if (ext == loc->cgi_extension) {
+            std::cout << "[DEBUG] CGI detected for: " << fsPath << std::endl;
+
+            CgiHandler cgi;
+            std::string rawOutput = cgi.execute(fsPath, req, loc->cgi_path);
+
+            return parseCgiResponse(rawOutput);
+        }
+    }
     // 7. File
     return serveFile(fsPath);
 }
@@ -348,5 +393,65 @@ HttpResponse Router::handlePost(const HttpRequest &req, const LocationConfig *lo
     res.status_code = 201;
     res.headers["Content-Length"] = "0";
     res.headers["Location"] = filename; // relative path
+    return res;
+}
+
+HttpResponse Router::parseCgiResponse(const std::string &raw)
+{
+    HttpResponse res;
+
+    size_t pos = raw.find("\r\n\r\n");
+    size_t delimiterLen = 4;
+
+    if (pos == std::string::npos)
+    {
+        pos = raw.find("\n\n");
+        delimiterLen = 2;
+    }
+
+    if (pos == std::string::npos)
+    {
+        res.status_code = 500;
+        res.body = "Invalid CGI output";
+        res.headers["Content-Length"] = "18";
+        res.headers["Content-Type"] = "text/plain";
+        return res;
+    }
+
+    std::string headerPart = raw.substr(0, pos);
+    std::string bodyPart = raw.substr(pos + delimiterLen);
+
+
+    std::istringstream hs(headerPart);
+    std::string line;
+
+    while (std::getline(hs, line)) {
+        if (line.size() && line[line.size()-1] == '\r')
+            line.erase(line.size()-1);
+
+        if (line.find("Status:") == 0) {
+            int code = atoi(line.substr(7).c_str());
+            res.status_code = code;
+        }
+        else {
+            size_t colon = line.find(':');
+            if (colon != std::string::npos) {
+                std::string key = line.substr(0, colon);
+                std::string val = line.substr(colon + 1);
+                if (val.size() && val[0] == ' ')
+                    val.erase(0, 1);
+                res.headers[key] = val;
+            }
+        }
+    }
+
+    res.body = bodyPart;
+
+    if (res.headers.find("Content-Length") == res.headers.end())
+        res.headers["Content-Length"] = StringUtils::toString(res.body.size());
+
+    if (res.headers.find("Content-Type") == res.headers.end())
+        res.headers["Content-Type"] = "text/html";
+
     return res;
 }

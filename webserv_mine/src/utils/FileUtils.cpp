@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:15:15 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/08 16:11:57 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/03/01 15:33:29 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,4 +31,12 @@ std::string FileUtils::readFile(const std::string &path)
     std::stringstream buffer;
     buffer << file.rdbuf();
     return buffer.str();
+}
+
+std::string FileUtils::getExtension(const std::string &path)
+{
+    size_t dot = path.find_last_of('.');
+    if (dot == std::string::npos)
+        return "";
+    return path.substr(dot);
 }

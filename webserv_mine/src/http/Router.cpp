@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:07:37 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/28 17:16:29 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/03/01 15:31:49 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,11 +54,7 @@ HttpResponse Router::route(const HttpRequest &req)
         }
         if (!allowed)
         {
-            res.status_code = 405;
-            res.body = "405 Method Not Allowed";
-            res.headers["Content-Length"] = StringUtils::toString(res.body.size());
-            res.headers["Content-Type"] = "text/plain";
-
+            HttpResponse res = makeErrorResponse(405, "Method Not Allowed");
             // Build Allow header
             std::string allow;
             for (size_t i = 0; i < loc->methods.size(); ++i)
@@ -98,7 +94,7 @@ HttpResponse Router::route(const HttpRequest &req)
     }
 
     // CGI always has priority (GET or POST)
-    if (!loc->cgi_path.empty() && !loc->cgi_extension.empty()) {
+    if (loc && !loc->cgi_path.empty() && !loc->cgi_extension.empty()) {
         std::cout << "[DEBUG] Entering CGI handling\n";
 
         CgiHandler cgi;
@@ -112,42 +108,33 @@ HttpResponse Router::route(const HttpRequest &req)
     {
         std::cout << "[DEBUG] Entering POST upload handling\n";
 
-        if (loc->upload_store.empty()) {
+        if (!loc || loc->upload_store.empty())
+        {
             std::cout << "[DEBUG] POST rejected: upload_store not set\n";
-
-            HttpResponse res;
-            res.status_code = 403;
-            res.body = "POST not allowed here (upload_store not set)";
-            res.headers["Content-Length"] = StringUtils::toString(res.body.size());
-            res.headers["Content-Type"] = "text/plain";
-            return res;
+            return makeErrorResponse(403, "POST not allowed here (upload_store not set)");
         }
         return handlePost(req, loc);
     }
-
-
-    
     // 5. Stat the path
-    std::cout << "[DEBUG] fsPath = '" << fsPath << "'" << std::endl;
+    std::cout << "[DEBUG] fsPath1 = '" << fsPath << "'" << std::endl;
     struct stat st;
     if (stat(fsPath.c_str(), &st) < 0)
     {
-        // Custom error page?
-        if (_config.error_pages.count(404))
-        {
-            std::string errPath = _config.root + _config.error_pages.at(404);
-            return serveFile(errPath);
-        }
-
-        res.status_code = 404;
-        res.body = "404 Not Found";
-        res.headers["Content-Length"] = "13";
-        res.headers["Content-Type"] = "text/plain";
-        return res;
+        // stat falló → 404
+        return makeErrorResponse(404, "Not Found");
     }
-    std::cout << "[DEBUG] st_mode = " << st.st_mode
-          << " isDir = " << S_ISDIR(st.st_mode) << std::endl;
-     // 6. Directory?
+    // AHORA sí: si es directorio
+    if (S_ISDIR(st.st_mode))
+    {
+        std::cout << "[DEBUG] st is a directory " << std::endl;
+        bool autoindex = loc ? loc->autoindex : _config.autoindex;
+        std::string index = (loc && !loc->index.empty()) ? loc->index : _config.index;
+
+        return serveDirectory(fsPath, path, index, autoindex);
+    }
+    std::cout << "[DEBUG] st_mode = " << st.st_mode << " isDir = " << S_ISDIR(st.st_mode) << std::endl;
+    
+    // 6. Directory?
     if (S_ISDIR(st.st_mode))
     {
         std::cout << "Entered directory if" << std::endl;
@@ -183,11 +170,7 @@ HttpResponse Router::serveFile(const std::string &path)
 
     if (!FileUtils::exists(path))
     {
-        res.status_code = 404;
-        res.body = "404 Not Found";
-        res.headers["Content-Length"] = "13";
-        res.headers["Content-Type"] = "text/plain";
-        return res;
+        return makeErrorResponse(404, "Not Found");
     }
 
     std::string content = FileUtils::readFile(path);
@@ -228,12 +211,7 @@ HttpResponse Router::serveDirectory(const std::string &path, const std::string &
         return generateAutoindex(path, urlPath);
 
     // Forbidden
-    HttpResponse res;
-    res.status_code = 403;
-    res.body = "403 Forbidden";
-    res.headers["Content-Length"] = "13";
-    res.headers["Content-Type"] = "text/plain";
-    return res;
+    return makeErrorResponse(403, "Directory listing forbidden");
 }
 
 HttpResponse Router::generateAutoindex(const std::string &path, const std::string &urlPath)
@@ -317,32 +295,17 @@ HttpResponse Router::handleDelete(const std::string &fsPath)
 
     if (stat(fsPath.c_str(), &st) < 0)
     {
-        // File does not exist
-        res.status_code = 404;
-        res.body = "404 Not Found";
-        res.headers["Content-Length"] = StringUtils::toString(res.body.size());
-        res.headers["Content-Type"] = "text/plain";
-        return res;
+        return makeErrorResponse(404, "Not Found");
     }
 
     if (S_ISDIR(st.st_mode))
     {
-        // We don't allow deleting directories
-        res.status_code = 403;
-        res.body = "403 Forbidden";
-        res.headers["Content-Length"] = StringUtils::toString(res.body.size());
-        res.headers["Content-Type"] = "text/plain";
-        return res;
+        return makeErrorResponse(403, "Forbidden");
     }
 
     if (std::remove(fsPath.c_str()) != 0)
     {
-        // Failed to delete (permissions, etc.)
-        res.status_code = 500;
-        res.body = "500 Internal Server Error";
-        res.headers["Content-Length"] = StringUtils::toString(res.body.size());
-        res.headers["Content-Type"] = "text/plain";
-        return res;
+        return makeErrorResponse(500, "Internal Server Error");
     }
 
     // Success: 204 No Content
@@ -358,11 +321,7 @@ HttpResponse Router::handlePost(const HttpRequest &req, const LocationConfig *lo
     // 1. upload_store must be configured
     if (loc->upload_store.empty())
     {
-        res.status_code = 403;
-        res.body = "403 Forbidden (upload_store not set)";
-        res.headers["Content-Length"] = StringUtils::toString(res.body.size());
-        res.headers["Content-Type"] = "text/plain";
-        return res;
+        return makeErrorResponse(403, "Forbidden (upload_store not set)");
     }
 
     // 2. Ensure upload directory exists
@@ -379,11 +338,7 @@ HttpResponse Router::handlePost(const HttpRequest &req, const LocationConfig *lo
     FILE *f = fopen(fullpath.c_str(), "wb");
     if (!f)
     {
-        res.status_code = 500;
-        res.body = "500 Internal Server Error (cannot open file)";
-        res.headers["Content-Length"] = StringUtils::toString(res.body.size());
-        res.headers["Content-Type"] = "text/plain";
-        return res;
+        return makeErrorResponse(500, "Internal Server Error (cannot open file)");
     }
 
     fwrite(req.body.c_str(), 1, req.body.size(), f);
@@ -411,11 +366,7 @@ HttpResponse Router::parseCgiResponse(const std::string &raw)
 
     if (pos == std::string::npos)
     {
-        res.status_code = 500;
-        res.body = "Invalid CGI output";
-        res.headers["Content-Length"] = "18";
-        res.headers["Content-Type"] = "text/plain";
-        return res;
+        return makeErrorResponse(500, "Invalid CGI output");
     }
 
     std::string headerPart = raw.substr(0, pos);
@@ -453,5 +404,110 @@ HttpResponse Router::parseCgiResponse(const std::string &raw)
     if (res.headers.find("Content-Type") == res.headers.end())
         res.headers["Content-Type"] = "text/html";
 
+    return res;
+}
+
+HttpResponse Router::generateAutoindexResponse(const std::string &urlPath, const std::string &fsPath)
+{
+    DIR *dir = opendir(fsPath.c_str());
+    if (!dir)
+        return makeErrorResponse(500, "Cannot open directory");
+
+    std::string html;
+    html += "<html><body>";
+    html += "<h1>Index of " + urlPath + "</h1><ul>";
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        std::string name = entry->d_name;
+
+        if (name == ".")
+            continue;
+
+        std::string full = fsPath + "/" + name;
+
+        struct stat st;
+        stat(full.c_str(), &st);
+
+        // Add slash for directories
+        if (S_ISDIR(st.st_mode))
+            name += "/";
+
+        html += "<li><a href=\"" + name + "\">" + name + "</a></li>";
+    }
+
+    html += "</ul></body></html>";
+    closedir(dir);
+
+    HttpResponse res;
+    res.status_code = 200;
+    res.body = html;
+    res.headers["Content-Type"] = "text/html";
+    res.headers["Content-Length"] = StringUtils::toString(html.size());
+    return res;
+}
+
+// HttpResponse Router::makeErrorResponse(int code, const std::string &message)
+// {
+//     HttpResponse res;
+//     res.status_code = code;
+
+//     // 1. Check if there is a custom error page for this code
+//     if (_config.error_pages.count(code))
+//     {
+//         std::string path = _config.root + _config.error_pages.at(code);
+
+//         // Try to serve the custom file
+//         struct stat st;
+//         if (stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode))
+//         {
+//             return serveFile(path);
+//         }
+//     }
+
+//     // 2. Default error page (simple HTML)
+//     std::string html;
+//     html += "<html><body>";
+//     html += "<h1>" + StringUtils::toString(code) + " " + message + "</h1>";
+//     html += "</body></html>";
+
+//     res.body = html;
+//     res.headers["Content-Type"] = "text/html";
+//     res.headers["Content-Length"] = StringUtils::toString(html.size());
+
+//     return res;
+// }
+
+HttpResponse Router::makeErrorResponse(int code, const std::string &msg)
+{
+    HttpResponse res;
+    res.status_code = code;
+
+    // 1. ¿Hay página personalizada para este código?
+    if (_config.error_pages.count(code))
+    {
+        std::string rel = _config.error_pages.at(code);   // ej: "/errors/404.html"
+        std::string full = _config.root + rel;            // ej: "./www/errors/404.html"
+
+        // 2. Intentar leer el archivo
+        if (FileUtils::exists(full))
+        {
+            std::string body = FileUtils::readFile(full);
+            res.body = body;
+            std::string ext = FileUtils::getExtension(full);
+            res.headers["Content-Type"] = MimeTypes::get(ext);
+            res.headers["Content-Length"] = StringUtils::toString(body.size());
+            return res;
+        }
+    }
+
+    // 3. Si no hay página personalizada o no existe → fallback genérico
+    std::string body = "<html><body><h1>" +
+                       StringUtils::toString(code) + " " + msg +
+                       "</h1></body></html>";
+
+    res.body = body;
+    res.headers["Content-Type"] = "text/html";
+    res.headers["Content-Length"] = StringUtils::toString(body.size());
     return res;
 }

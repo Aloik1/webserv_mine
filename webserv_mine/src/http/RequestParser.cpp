@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:07:22 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/28 15:44:54 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/03/01 14:03:23 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,10 +83,12 @@ HttpRequest RequestParser::parse(const std::string &raw, const ServerConfig &con
             return HttpRequest(); // incomplete
 
         if (len > (int)config.client_max_body_size)
+        {
+            std::cout << "[DEBUG] Body too large, sending 413\n";
             throw HttpException(413, "Payload Too Large");
+        }
 
         req.body = bodyPart.substr(0, len);
     }
-
     return req;
 }

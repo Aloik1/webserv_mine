@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 13:54:08 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/28 15:40:49 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/02/28 19:40:49 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,9 @@ class Router {
 		HttpResponse handleDelete(const std::string &fsPath);
 		HttpResponse handlePost(const HttpRequest &req, const LocationConfig *loc);
 		HttpResponse parseCgiResponse(const std::string &raw);
+		HttpResponse generateAutoindexResponse(const std::string &urlPath, const std::string &fsPath);
+		HttpResponse makeErrorResponse(int code, const std::string &message);
+
 };
 
 #endif

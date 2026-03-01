@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:03:59 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/27 17:55:15 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/03/01 19:45:27 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -175,6 +175,11 @@ void EventLoop::handleClientRead(int clientFd)
     // Route using correct config
     Router router(c->config);
     HttpResponse res = router.route(req);
+
+    if (req.method == "HEAD")
+    {
+        res.body.clear();
+    }
 
     std::string raw = res.serialize();
 

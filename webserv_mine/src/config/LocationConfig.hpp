@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 13:51:37 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/10 14:43:37 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/03/01 18:14:50 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,8 @@ struct LocationConfig {
 	std::string root;
 	std::string index;
 	bool autoindex;
+	bool is_alias;
+
 	
 	// List of allowed HTTP methods for this location (e.g. GET, POST, DELETE).
     	// If empty, all methods are allowed.
@@ -37,7 +39,7 @@ struct LocationConfig {
 	int redirect_code;
 	std::string redirect_url;
 
-	LocationConfig() : autoindex(false), redirect_code(0) {}
+	LocationConfig() : autoindex(false), is_alias(false), redirect_code(0) {}
 };
 
 #endif

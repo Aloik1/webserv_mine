@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:07:37 by aloiki            #+#    #+#             */
-/*   Updated: 2026/03/01 15:31:49 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/03/01 18:23:27 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,8 @@ HttpResponse Router::route(const HttpRequest &req)
     HttpResponse res;
     std::cout << "[DEBUG] route(): req.path = '" << req.path << "'\n";
     std::cout << "[DEBUG] req.method = '" << req.method << "'" << std::endl;
+    res.is_head = (req.method == "HEAD");
+
 
 
     // 1. Find matching location    
@@ -73,16 +75,25 @@ HttpResponse Router::route(const HttpRequest &req)
     // 3. Compute the effective path (strip location prefix)
     std::string path = req.path;
 
-    if (loc)
+    // IMPORTANT: Only strip prefix if using alias (you don't use alias)
+    if (loc && loc->is_alias)
     {
-        // Remove the location prefix
         if (path.size() >= loc->path.size())
             path = path.substr(loc->path.size());
-
-        // If nothing left, treat as "/"
         if (path.empty())
             path = "/";
     }
+
+    // if (loc)
+    // {
+    //     // Remove the location prefix
+    //     if (path.size() >= loc->path.size())
+    //         path = path.substr(loc->path.size());
+
+    //     // If nothing left, treat as "/"
+    //     if (path.empty())
+    //         path = "/";
+    // }
     // 4. Build filesystem path
     std::string fsPath = root + path;
 
@@ -175,10 +186,9 @@ HttpResponse Router::serveFile(const std::string &path)
 
     std::string content = FileUtils::readFile(path);
 
-    // Detect MIME type
-    size_t dot = path.find_last_of('.');
-    std::string ext = (dot != std::string::npos) ? path.substr(dot) : "";
+    std::string ext = FileUtils::getExtension(path);
     std::string mime = MimeTypes::get(ext);
+
 
     res.status_code = 200;
     res.body = content;
@@ -380,19 +390,28 @@ HttpResponse Router::parseCgiResponse(const std::string &raw)
         if (line.size() && line[line.size()-1] == '\r')
             line.erase(line.size()-1);
 
-        if (line.find("Status:") == 0) {
-            int code = atoi(line.substr(7).c_str());
-            res.status_code = code;
-        }
-        else {
-            size_t colon = line.find(':');
-            if (colon != std::string::npos) {
-                std::string key = line.substr(0, colon);
-                std::string val = line.substr(colon + 1);
-                if (val.size() && val[0] == ' ')
-                    val.erase(0, 1);
-                res.headers[key] = val;
+        if (!line.empty())
+        {
+            // Status header
+            if (line.find("Status:") == 0)
+            {
+                int code = atoi(line.substr(7).c_str());
+                res.status_code = code;
+                continue;
             }
+            // Invalid header (missing colon)
+            if (line.find(':') == std::string::npos)
+            {
+                return makeErrorResponse(500, "Invalid CGI header");
+            }
+
+            // Valid header
+            size_t colon = line.find(':');
+            std::string key = line.substr(0, colon);
+            std::string val = line.substr(colon + 1);
+            if (!val.empty() && val[0] == ' ')
+                val.erase(0, 1);
+            res.headers[key] = val;
         }
     }
 

@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:06:54 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/08 15:45:36 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/03/01 17:29:44 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include <sstream>
 
 HttpResponse::HttpResponse()
-	: status_code(200)
+	: status_code(200), is_head(false)
 {}
 
 std::string HttpResponse::serialize() const
@@ -40,7 +40,10 @@ std::string HttpResponse::serialize() const
     }
 
     ss << "\r\n";
-    ss << body;
+    if (!is_head)
+        ss << body;
+
+    //ss << body;
 
     return ss.str();
 }

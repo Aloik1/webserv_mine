@@ -1,0 +1,7 @@
+--------------------------8f9da7c5a913be78
+Content-Disposition: form-data; name="file"; filename="test.txt"
+Content-Type: text/plain
+
+archivo
+
+--------------------------8f9da7c5a913be78--

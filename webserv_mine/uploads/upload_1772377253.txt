@@ -1,0 +1,7 @@
+--------------------------83f75652848a16e1
+Content-Disposition: form-data; name="file"; filename="test.txt"
+Content-Type: text/plain
+
+archivo de prueba
+
+--------------------------83f75652848a16e1--

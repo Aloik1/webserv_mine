@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:03:59 by aloiki            #+#    #+#             */
-/*   Updated: 2026/03/01 19:45:27 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/03/02 17:44:03 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,8 +173,8 @@ void EventLoop::handleClientRead(int clientFd)
         return;
 
     // Route using correct config
-    Router router(c->config);
-    HttpResponse res = router.route(req);
+    Router router(_configs);
+    HttpResponse res = router.route(req);//, c->config);
 
     if (req.method == "HEAD")
     {

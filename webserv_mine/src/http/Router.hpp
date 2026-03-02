@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 13:54:08 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/28 19:40:49 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/03/02 17:45:47 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,21 +21,22 @@
 
 class Router {
 	public:
-		Router(const ServerConfig &config);
+		Router(const std::vector<ServerConfig> &servers);
 		HttpResponse route(const HttpRequest &req);
 	private:
-		const ServerConfig &_config;
-		const LocationConfig *matchLocation(const std::string &path);
+		std::vector<ServerConfig> _servers;
+		const LocationConfig *matchLocation(const std::string &path, const ServerConfig &config);
+		const ServerConfig& selectServer(const HttpRequest &req) const;
 
 
-		HttpResponse serveFile(const std::string &path);
-		HttpResponse serveDirectory(const std::string &path, const std::string &urlPath, const std::string &index, bool autoindex);
+		HttpResponse serveFile(const std::string &path, const ServerConfig &config);
+		HttpResponse serveDirectory(const std::string &path, const std::string &urlPath, const std::string &index, bool autoindex, const ServerConfig &config);
 		HttpResponse generateAutoindex(const std::string &path, const std::string &urlPath);
-		HttpResponse handleDelete(const std::string &fsPath);
-		HttpResponse handlePost(const HttpRequest &req, const LocationConfig *loc);
-		HttpResponse parseCgiResponse(const std::string &raw);
-		HttpResponse generateAutoindexResponse(const std::string &urlPath, const std::string &fsPath);
-		HttpResponse makeErrorResponse(int code, const std::string &message);
+		HttpResponse handleDelete(const std::string &fsPath, const ServerConfig &config);
+		HttpResponse handlePost(const HttpRequest &req, const LocationConfig *loc, const ServerConfig &config);
+		HttpResponse parseCgiResponse(const std::string &raw, const ServerConfig &config);
+		HttpResponse generateAutoindexResponse(const std::string &urlPath, const std::string &fsPath, const ServerConfig &config);
+		HttpResponse makeErrorResponse(int code, const std::string &msg, const ServerConfig &config);
 
 };
 

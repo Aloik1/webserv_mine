@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:07:37 by aloiki            #+#    #+#             */
-/*   Updated: 2026/03/01 18:23:27 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/03/02 17:42:27 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,13 +23,15 @@
 #include <cstdio>
 #include <cstdlib>
 
-Router::Router(const ServerConfig &config)
-    : _config(config)
+Router::Router(const std::vector<ServerConfig> &servers)
+    : _servers(servers)
 {}
 
-HttpResponse Router::route(const HttpRequest &req)
+
+HttpResponse Router::route(const HttpRequest &req)//, const ServerConfig &config)
 {
     HttpResponse res;
+    const ServerConfig &config = selectServer(req);
     std::cout << "[DEBUG] route(): req.path = '" << req.path << "'\n";
     std::cout << "[DEBUG] req.method = '" << req.method << "'" << std::endl;
     res.is_head = (req.method == "HEAD");
@@ -37,7 +39,7 @@ HttpResponse Router::route(const HttpRequest &req)
 
 
     // 1. Find matching location    
-    const LocationConfig *loc = matchLocation(req.path);
+    const LocationConfig *loc = matchLocation(req.path, config);
     std::cout << "[DEBUG] matchLocation('" << req.path << "') → "
           << (loc ? loc->path : "NULL") << "\n";
 
@@ -56,7 +58,7 @@ HttpResponse Router::route(const HttpRequest &req)
         }
         if (!allowed)
         {
-            HttpResponse res = makeErrorResponse(405, "Method Not Allowed");
+            HttpResponse res = makeErrorResponse(405, "Method Not Allowed", config);
             // Build Allow header
             std::string allow;
             for (size_t i = 0; i < loc->methods.size(); ++i)
@@ -70,7 +72,7 @@ HttpResponse Router::route(const HttpRequest &req)
         }
     }
     // 2. Determine effective root
-    std::string root = loc ? loc->root : _config.root;
+    std::string root = loc ? loc->root : config.root;
 
     // 3. Compute the effective path (strip location prefix)
     std::string path = req.path;
@@ -83,17 +85,6 @@ HttpResponse Router::route(const HttpRequest &req)
         if (path.empty())
             path = "/";
     }
-
-    // if (loc)
-    // {
-    //     // Remove the location prefix
-    //     if (path.size() >= loc->path.size())
-    //         path = path.substr(loc->path.size());
-
-    //     // If nothing left, treat as "/"
-    //     if (path.empty())
-    //         path = "/";
-    // }
     // 4. Build filesystem path
     std::string fsPath = root + path;
 
@@ -101,7 +92,7 @@ HttpResponse Router::route(const HttpRequest &req)
     if (req.method == "DELETE")
     {
         std::cout << "[DEBUG] = Entering DELETE handling" << std::endl;
-        return handleDelete(fsPath);
+        return handleDelete(fsPath, config);
     }
 
     // CGI always has priority (GET or POST)
@@ -111,7 +102,7 @@ HttpResponse Router::route(const HttpRequest &req)
         CgiHandler cgi;
         std::string output = cgi.execute(fsPath, req, loc->cgi_path);
 
-        return parseCgiResponse(output);
+        return parseCgiResponse(output, config);
     }
 
     // POST upload handling (only if upload_store is set)
@@ -122,9 +113,9 @@ HttpResponse Router::route(const HttpRequest &req)
         if (!loc || loc->upload_store.empty())
         {
             std::cout << "[DEBUG] POST rejected: upload_store not set\n";
-            return makeErrorResponse(403, "POST not allowed here (upload_store not set)");
+            return makeErrorResponse(403, "POST not allowed here (upload_store not set)", config);
         }
-        return handlePost(req, loc);
+        return handlePost(req, loc, config);
     }
     // 5. Stat the path
     std::cout << "[DEBUG] fsPath1 = '" << fsPath << "'" << std::endl;
@@ -132,16 +123,16 @@ HttpResponse Router::route(const HttpRequest &req)
     if (stat(fsPath.c_str(), &st) < 0)
     {
         // stat falló → 404
-        return makeErrorResponse(404, "Not Found");
+        return makeErrorResponse(404, "Not Found", config);
     }
     // AHORA sí: si es directorio
     if (S_ISDIR(st.st_mode))
     {
         std::cout << "[DEBUG] st is a directory " << std::endl;
-        bool autoindex = loc ? loc->autoindex : _config.autoindex;
-        std::string index = (loc && !loc->index.empty()) ? loc->index : _config.index;
+        bool autoindex = loc ? loc->autoindex : config.autoindex;
+        std::string index = (loc && !loc->index.empty()) ? loc->index : config.index;
 
-        return serveDirectory(fsPath, path, index, autoindex);
+        return serveDirectory(fsPath, path, index, autoindex, config);
     }
     std::cout << "[DEBUG] st_mode = " << st.st_mode << " isDir = " << S_ISDIR(st.st_mode) << std::endl;
     
@@ -149,10 +140,10 @@ HttpResponse Router::route(const HttpRequest &req)
     if (S_ISDIR(st.st_mode))
     {
         std::cout << "Entered directory if" << std::endl;
-        bool autoindex = loc ? loc->autoindex : _config.autoindex;
-        std::string index = (loc && !loc->index.empty()) ? loc->index : _config.index;
+        bool autoindex = loc ? loc->autoindex : config.autoindex;
+        std::string index = (loc && !loc->index.empty()) ? loc->index : config.index;
 
-        return serveDirectory(fsPath, path, index, autoindex);
+        return serveDirectory(fsPath, path, index, autoindex, config);
     }
 
     // --- CGI detection ---
@@ -167,21 +158,21 @@ HttpResponse Router::route(const HttpRequest &req)
             CgiHandler cgi;
             std::string rawOutput = cgi.execute(fsPath, req, loc->cgi_path);
 
-            return parseCgiResponse(rawOutput);
+            return parseCgiResponse(rawOutput, config);
         }
     }
     // 7. File
-    return serveFile(fsPath);
+    return serveFile(fsPath, config);
 }
 
 
-HttpResponse Router::serveFile(const std::string &path)
+HttpResponse Router::serveFile(const std::string &path, const ServerConfig &config)
 {
     HttpResponse res;
 
     if (!FileUtils::exists(path))
     {
-        return makeErrorResponse(404, "Not Found");
+        return makeErrorResponse(404, "Not Found", config);
     }
 
     std::string content = FileUtils::readFile(path);
@@ -198,7 +189,8 @@ HttpResponse Router::serveFile(const std::string &path)
     return res;
 }
 
-HttpResponse Router::serveDirectory(const std::string &path, const std::string &urlPath, const std::string &index, bool autoindex)
+HttpResponse Router::serveDirectory(const std::string &path, const std::string &urlPath,
+                                    const std::string &index, bool autoindex, const ServerConfig &config)
 {
     // Try index file
     std::string indexPath = path + "/" + index;
@@ -213,7 +205,7 @@ HttpResponse Router::serveDirectory(const std::string &path, const std::string &
     if (FileUtils::exists(indexPath))
     {
         std::cout << "Its a FILE" << std::endl;
-        return serveFile(indexPath);
+        return serveFile(indexPath, config);
     }
 
     // Autoindex?
@@ -221,7 +213,7 @@ HttpResponse Router::serveDirectory(const std::string &path, const std::string &
         return generateAutoindex(path, urlPath);
 
     // Forbidden
-    return makeErrorResponse(403, "Directory listing forbidden");
+    return makeErrorResponse(403, "Directory listing forbidden", config);
 }
 
 HttpResponse Router::generateAutoindex(const std::string &path, const std::string &urlPath)
@@ -272,14 +264,14 @@ HttpResponse Router::generateAutoindex(const std::string &path, const std::strin
     return res;
 }
 
-const LocationConfig *Router::matchLocation(const std::string &path)
+const LocationConfig *Router::matchLocation(const std::string &path, const ServerConfig &config)
 {
     const LocationConfig *best = NULL;
     size_t bestLen = 0;
 
-    for (size_t i = 0; i < _config.locations.size(); i++)
+    for (size_t i = 0; i < config.locations.size(); i++)
     {
-        const LocationConfig &loc = _config.locations[i];
+        const LocationConfig &loc = config.locations[i];
 
         // Must be a prefix match
         if (path.compare(0, loc.path.size(), loc.path) == 0)
@@ -298,24 +290,24 @@ const LocationConfig *Router::matchLocation(const std::string &path)
     return best;
 }
 
-HttpResponse Router::handleDelete(const std::string &fsPath)
+HttpResponse Router::handleDelete(const std::string &fsPath, const ServerConfig &config)
 {
     HttpResponse res;
     struct stat st;
 
     if (stat(fsPath.c_str(), &st) < 0)
     {
-        return makeErrorResponse(404, "Not Found");
+        return makeErrorResponse(404, "Not Found", config);
     }
 
     if (S_ISDIR(st.st_mode))
     {
-        return makeErrorResponse(403, "Forbidden");
+        return makeErrorResponse(403, "Forbidden", config);
     }
 
     if (std::remove(fsPath.c_str()) != 0)
     {
-        return makeErrorResponse(500, "Internal Server Error");
+        return makeErrorResponse(500, "Internal Server Error", config);
     }
 
     // Success: 204 No Content
@@ -324,14 +316,14 @@ HttpResponse Router::handleDelete(const std::string &fsPath)
     return res;
 }
 
-HttpResponse Router::handlePost(const HttpRequest &req, const LocationConfig *loc)
+HttpResponse Router::handlePost(const HttpRequest &req, const LocationConfig *loc, const ServerConfig &config)
 {
     HttpResponse res;
 
     // 1. upload_store must be configured
     if (loc->upload_store.empty())
     {
-        return makeErrorResponse(403, "Forbidden (upload_store not set)");
+        return makeErrorResponse(403, "Forbidden (upload_store not set)", config);
     }
 
     // 2. Ensure upload directory exists
@@ -348,7 +340,7 @@ HttpResponse Router::handlePost(const HttpRequest &req, const LocationConfig *lo
     FILE *f = fopen(fullpath.c_str(), "wb");
     if (!f)
     {
-        return makeErrorResponse(500, "Internal Server Error (cannot open file)");
+        return makeErrorResponse(500, "Internal Server Error (cannot open file)", config);
     }
 
     fwrite(req.body.c_str(), 1, req.body.size(), f);
@@ -361,7 +353,7 @@ HttpResponse Router::handlePost(const HttpRequest &req, const LocationConfig *lo
     return res;
 }
 
-HttpResponse Router::parseCgiResponse(const std::string &raw)
+HttpResponse Router::parseCgiResponse(const std::string &raw, const ServerConfig &config)
 {
     HttpResponse res;
 
@@ -376,7 +368,7 @@ HttpResponse Router::parseCgiResponse(const std::string &raw)
 
     if (pos == std::string::npos)
     {
-        return makeErrorResponse(500, "Invalid CGI output");
+        return makeErrorResponse(500, "Invalid CGI output", config);
     }
 
     std::string headerPart = raw.substr(0, pos);
@@ -402,7 +394,7 @@ HttpResponse Router::parseCgiResponse(const std::string &raw)
             // Invalid header (missing colon)
             if (line.find(':') == std::string::npos)
             {
-                return makeErrorResponse(500, "Invalid CGI header");
+                return makeErrorResponse(500, "Invalid CGI header", config);
             }
 
             // Valid header
@@ -426,11 +418,11 @@ HttpResponse Router::parseCgiResponse(const std::string &raw)
     return res;
 }
 
-HttpResponse Router::generateAutoindexResponse(const std::string &urlPath, const std::string &fsPath)
+HttpResponse Router::generateAutoindexResponse(const std::string &urlPath, const std::string &fsPath, const ServerConfig &config)
 {
     DIR *dir = opendir(fsPath.c_str());
     if (!dir)
-        return makeErrorResponse(500, "Cannot open directory");
+        return makeErrorResponse(500, "Cannot open directory", config);
 
     std::string html;
     html += "<html><body>";
@@ -466,47 +458,16 @@ HttpResponse Router::generateAutoindexResponse(const std::string &urlPath, const
     return res;
 }
 
-// HttpResponse Router::makeErrorResponse(int code, const std::string &message)
-// {
-//     HttpResponse res;
-//     res.status_code = code;
-
-//     // 1. Check if there is a custom error page for this code
-//     if (_config.error_pages.count(code))
-//     {
-//         std::string path = _config.root + _config.error_pages.at(code);
-
-//         // Try to serve the custom file
-//         struct stat st;
-//         if (stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode))
-//         {
-//             return serveFile(path);
-//         }
-//     }
-
-//     // 2. Default error page (simple HTML)
-//     std::string html;
-//     html += "<html><body>";
-//     html += "<h1>" + StringUtils::toString(code) + " " + message + "</h1>";
-//     html += "</body></html>";
-
-//     res.body = html;
-//     res.headers["Content-Type"] = "text/html";
-//     res.headers["Content-Length"] = StringUtils::toString(html.size());
-
-//     return res;
-// }
-
-HttpResponse Router::makeErrorResponse(int code, const std::string &msg)
+HttpResponse Router::makeErrorResponse(int code, const std::string &msg, const ServerConfig &config)
 {
     HttpResponse res;
     res.status_code = code;
 
     // 1. ¿Hay página personalizada para este código?
-    if (_config.error_pages.count(code))
+    if (config.error_pages.count(code))
     {
-        std::string rel = _config.error_pages.at(code);   // ej: "/errors/404.html"
-        std::string full = _config.root + rel;            // ej: "./www/errors/404.html"
+        std::string rel = config.error_pages.at(code);   // ej: "/errors/404.html"
+        std::string full = config.root + rel;            // ej: "./www/errors/404.html"
 
         // 2. Intentar leer el archivo
         if (FileUtils::exists(full))
@@ -529,4 +490,21 @@ HttpResponse Router::makeErrorResponse(int code, const std::string &msg)
     res.headers["Content-Type"] = "text/html";
     res.headers["Content-Length"] = StringUtils::toString(body.size());
     return res;
+}
+
+const ServerConfig& Router::selectServer(const HttpRequest &req) const
+{
+    // 1. Leer Host: del request
+    std::string host;
+    if (req.headers.count("Host"))
+        host = req.headers.at("Host");
+
+    // 2. Buscar server_name que coincida
+    for (size_t i = 0; i < _servers.size(); ++i) {
+        if (_servers[i].server_name == host)
+            return _servers[i];
+    }
+
+    // 3. Si no coincide ninguno → usar el primero (default server)
+    return _servers[0];
 }

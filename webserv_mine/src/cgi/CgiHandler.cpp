@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:09:11 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/28 16:09:27 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/03/02 16:05:22 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,8 @@ std::string CgiHandler::execute(const std::string &script, const HttpRequest &re
         env.push_back("CONTENT_LENGTH=" + StringUtils::toString(req.body.size()));
         if (req.headers.count("Content-Type"))
             env.push_back("CONTENT_TYPE=" + req.headers.at("Content-Type"));
+
+        env.push_back("QUERY_STRING=" + req.query);
         env.push_back("SCRIPT_FILENAME=" + script);
         env.push_back("SCRIPT_NAME=" + script);
         env.push_back("GATEWAY_INTERFACE=CGI/1.1");

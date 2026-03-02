@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:07:22 by aloiki            #+#    #+#             */
-/*   Updated: 2026/03/01 14:03:23 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/03/02 15:57:48 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,6 +56,19 @@ HttpRequest RequestParser::parse(const std::string &raw, const ServerConfig &con
     req.method  = parts[0];
     req.path    = parts[1];
     req.version = parts[2];
+
+    // EXTRA: split path and query string
+    size_t qpos = req.path.find('?');
+    if (qpos != std::string::npos)
+    {
+        req.query = req.path.substr(qpos + 1);
+        req.path  = req.path.substr(0, qpos);
+    }
+    else
+    {
+        req.query = "";
+    }
+
 
     // 3. Headers
     while (std::getline(ss, line))

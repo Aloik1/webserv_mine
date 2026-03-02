@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:03:44 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/09 15:27:45 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/03/02 18:30:16 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,11 @@
 #include <unistd.h>
 
 Client::Client(int fd, const ServerConfig &conf)
-	: fd(fd), wantWrite(false), config(conf)
+    : fd(fd),
+      wantWrite(false),
+      config(conf),
+      keepAlive(false),
+      lastActivity(time(NULL))
 {}
 
 Client::~Client()

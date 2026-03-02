@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 14:03:59 by aloiki            #+#    #+#             */
-/*   Updated: 2026/03/02 17:44:03 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/03/02 18:49:27 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,8 @@ void EventLoop::run()
         }
 
         // Add client sockets
-        for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+        for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+        {
             pollfd p;
             p.fd = it->first;
             p.events = POLLIN;
@@ -70,11 +71,31 @@ void EventLoop::run()
             fds.push_back(p);
         }
 
+        // --- KEEP ALIVE TIMEOUT CHECK ---
+        time_t now = time(NULL);
+        for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end();)
+        {
+            Client* c = it->second;
+            if (now - c->lastActivity > 10)
+            {
+                int fd = it->first;
+                removeClient(fd);
+                it = _clients.begin();
+            }
+            else
+            {
+                ++it;
+            }
+        }
+        // --- END KEEP ALIVE TIMEOUT CHECK ---
+
         int ret = poll(&fds[0], fds.size(), 1000);
-        if (ret < 0) {
+        if (ret < 0)
+        {
             std::cerr << "poll() failed\n";
             continue;
         }
+
         // Process events
         for (size_t i = 0; i < fds.size(); i++) {
             int fd = fds[i].fd;
@@ -90,9 +111,15 @@ void EventLoop::run()
             // Client socket
             if (fds[i].revents & POLLIN)
             {
+                char tmp;
+                int peek = recv(fd, &tmp, 1, MSG_PEEK);
+                if (peek <= 0)
+                    continue; // no hay datos nuevos → no leer
+
                 std::cout << "entering client read" << std::endl;
                 handleClientRead(fd);
             }
+
 
             if (_clients.find(fd) != _clients.end() && (fds[i].revents & POLLOUT))
             {
@@ -137,13 +164,22 @@ void EventLoop::handleClientRead(int clientFd)
     char buffer[4096];
     int bytes = recv(clientFd, buffer, sizeof(buffer), 0);
 
-    if (bytes <= 0)
+    if (bytes < 0)
     {
         removeClient(clientFd);
         return;
     }
+    if (bytes == 0)
+    {
+        // el cliente no ha enviado nada nuevo,
+        // pero NO significa que quiera cerrar la conexión
+        //c->wantWrite = false;
+        return;
+    }
+
     Client *c = _clients[clientFd];
     c->readBuffer.append(buffer, bytes);
+    c->lastActivity = time(NULL);
 
     // Parse request with correct config
     RequestParser parser;
@@ -167,6 +203,23 @@ void EventLoop::handleClientRead(int clientFd)
         c->readBuffer.clear();
         return;
     }
+    
+    // --- KEEP ALIVE DETECTION ---
+    if (req.headers.count("Connection"))
+    {
+        std::string conn = req.headers.at("Connection");
+        std::transform(conn.begin(), conn.end(), conn.begin(), ::tolower);
+        if (conn == "keep-alive")
+            c->keepAlive = true;
+        else
+            c->keepAlive = false;
+    }
+    else
+    {
+        c->keepAlive = true;
+    }
+    c->lastActivity = time(NULL);
+    // --- END KEEP ALIVE DETECTION ---
     
     // Request incomplete → wait for more data
     if (req.method.empty())
@@ -211,6 +264,7 @@ void EventLoop::handleClientWrite(int clientFd)
         0
     #endif
     );
+    c->lastActivity = time(NULL);
     if (bytes <= 0)
     {
         std::cout << "[WRITE] send() failed or peer closed\n";
@@ -228,11 +282,22 @@ void EventLoop::handleClientWrite(int clientFd)
         return;
     }
     c->writeBuffer.erase(0, bytes);
-    if (c->writeBuffer.empty()) {
-        std::cout << "[WRITE] all data sent\n";
+    if (c->writeBuffer.empty())
+    {
+        std::cout << " [WRITE] all data sent\n";
         c->wantWrite = false;
-        // removeClient(clientFd);
+
+        if (!c->keepAlive)
+        {
+            removeClient(clientFd);
+        }
+        else
+        {
+            c->readBuffer.clear();
+            c->lastActivity = time(NULL);
+        }
     }
+
 }
 
 void EventLoop::removeClient(int clientFd)

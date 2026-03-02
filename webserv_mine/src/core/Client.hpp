@@ -6,7 +6,7 @@
 /*   By: aloiki <aloiki@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/08 13:48:24 by aloiki            #+#    #+#             */
-/*   Updated: 2026/02/09 15:27:08 by aloiki           ###   ########.fr       */
+/*   Updated: 2026/03/02 18:31:43 by aloiki           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,11 +23,13 @@ class Client {
 		std::string writeBuffer;
 		bool wantWrite;
 
-		ServerConfig config;
+		ServerConfig config;   // ← MOVER AQUÍ
+
+		bool keepAlive;
+		time_t lastActivity;
 
 		Client(int fd, const ServerConfig &conf);
 		~Client();
-
 };
 
 #endif

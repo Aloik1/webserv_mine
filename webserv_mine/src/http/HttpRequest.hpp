@@ -26,6 +26,7 @@ class HttpRequest {
 		std::string cgi_path;
 		std::string cgi_extension;
 		std::string query;
+		size_t consumedBytes;
 
 
 		HttpRequest();

@@ -12,5 +12,5 @@
 
 #include "HttpRequest.hpp"
 
-HttpRequest::HttpRequest()
+HttpRequest::HttpRequest() : method(""), consumedBytes(0)
 {}

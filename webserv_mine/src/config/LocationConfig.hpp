@@ -34,12 +34,17 @@ struct LocationConfig {
 	// CGI configuration: extension and interpreter path.
 	std::string cgi_extension;
 	std::string cgi_path;
+
+	std::string auth_basic;
+	std::string auth_basic_user_file;
 	
 	// Optional redirect: if redirect_code != 0, redirect to redirect_url.
 	int redirect_code;
 	std::string redirect_url;
 
-	LocationConfig() : autoindex(false), is_alias(false), redirect_code(0) {}
+	size_t client_max_body_size;
+
+	LocationConfig() : path(""), root(""), index(""), autoindex(false), is_alias(false), upload_store(""), cgi_extension(""), cgi_path(""), auth_basic(""), redirect_code(0), redirect_url(""), client_max_body_size(0) {}
 };
 
 #endif

@@ -32,11 +32,14 @@ class Router {
 		HttpResponse serveFile(const std::string &path, const ServerConfig &config);
 		HttpResponse serveDirectory(const std::string &path, const std::string &urlPath, const std::string &index, bool autoindex, const ServerConfig &config);
 		HttpResponse generateAutoindex(const std::string &path, const std::string &urlPath);
-		HttpResponse handleDelete(const std::string &fsPath, const ServerConfig &config);
+		HttpResponse handleDelete(const std::string &fsPath, const LocationConfig *loc, const ServerConfig &config);
 		HttpResponse handlePost(const HttpRequest &req, const LocationConfig *loc, const ServerConfig &config);
+		HttpResponse handlePut(const HttpRequest &req, const std::string &fsPath, const LocationConfig *loc, const ServerConfig &config);
 		HttpResponse parseCgiResponse(const std::string &raw, const ServerConfig &config);
 		HttpResponse generateAutoindexResponse(const std::string &urlPath, const std::string &fsPath, const ServerConfig &config);
+		HttpResponse tryContentNegotiation(const std::string &fsPath, const HttpRequest &req, const ServerConfig &config);
 		HttpResponse makeErrorResponse(int code, const std::string &msg, const ServerConfig &config);
+		bool checkAuth(const HttpRequest &req, const LocationConfig *loc, HttpResponse &res);
 
 };
 

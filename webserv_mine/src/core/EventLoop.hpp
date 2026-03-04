@@ -21,18 +21,18 @@ class Client;
 
 class EventLoop {
 	public:
-		EventLoop(const std::vector<int> &listeningSockets, const std::vector<ServerConfig> &configs);
+		EventLoop(const std::vector<int> &listeningSockets, const std::map<int, std::vector<ServerConfig> > &socketToConfigs);
 		~EventLoop();
 		void run();
 	private:
 		std::vector<int> _listeningSockets;
-		std::vector<ServerConfig> _configs;
 		std::map<int, Client*> _clients;
-		std::map<int, ServerConfig> _socketToConfig;
+		std::map<int, std::vector<ServerConfig> > _socketToConfigs;
 
 		void acceptNewClient(int listenFd);
 		void handleClientRead(int clientFd);
 		void handleClientWrite(int clientFd);
+		void processRequests(Client *c);
 		void removeClient(int clientFd);
 
 };

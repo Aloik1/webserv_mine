@@ -22,6 +22,9 @@ namespace StringUtils {
     std::string toString(size_t n);
     int toInt(const std::string &s);
     size_t toSizeT(const std::string &s);
+    std::string base64Encode(const std::string &s);
+    std::string base64Decode(const std::string &s);
+    std::string toLower(const std::string &s);
 }
 
 #endif

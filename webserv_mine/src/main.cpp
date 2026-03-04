@@ -62,12 +62,19 @@
 #include "core/Server.hpp"
 #include <iostream>
 
-int main()
+int main(int argc, char **argv)
 {
+    if (argc > 2)
+    {
+        std::cerr << "Usage: ./webserv [config_file]\n";
+        return 1;
+    }
+    std::string configFile = (argc == 2) ? argv[1] : "webserv.conf";
+
     try
     {
         ConfigParser parser;
-        std::vector<ServerConfig> servers = parser.parse("webserv.conf");
+        std::vector<ServerConfig> servers = parser.parse(configFile);
 
         std::cout << "Parsed " << servers.size() << " server blocks\n";
         for (size_t i = 0; i < servers.size(); i++)

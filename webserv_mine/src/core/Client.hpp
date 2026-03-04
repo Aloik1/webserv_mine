@@ -23,12 +23,17 @@ class Client {
 		std::string writeBuffer;
 		bool wantWrite;
 
-		ServerConfig config;   // ← MOVER AQUÍ
+		std::vector<ServerConfig> configs;
+		ServerConfig defaultConfig;
 
 		bool keepAlive;
 		time_t lastActivity;
 
-		Client(int fd, const ServerConfig &conf);
+		bool headerParsed;
+		size_t headerSize;
+		size_t headerDelimiterLen;
+
+		Client(int fd, const std::vector<ServerConfig> &eligibleConfigs);
 		~Client();
 };
 

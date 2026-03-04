@@ -78,7 +78,11 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &path)
 ServerConfig ConfigParser::parseServerBlock()
 {
     ServerConfig srv;
-    srv.client_max_body_size = 0;
+    srv.client_max_body_size = 104857600; // 100MB default for tester
+    srv.autoindex = false;
+    srv.root = "./www";
+    srv.index = "index.html";
+    srv.server_name = "";
 
     while (peek().type != TOKEN_RBRACE)
         parseServerDirective(srv);
@@ -166,7 +170,10 @@ void ConfigParser::parseServerDirective(ServerConfig &srv)
     }
     else if (key == "server_name")
     {
-        srv.server_name = get().value;
+        if (peek().type != TOKEN_SEMICOLON)
+            srv.server_name = get().value;
+        while (peek().type != TOKEN_SEMICOLON)
+            get();
         expect(TOKEN_SEMICOLON, "Expected ';' after server_name");
     }
     else if (key == "root")
@@ -184,6 +191,11 @@ void ConfigParser::parseServerDirective(ServerConfig &srv)
         std::string val = get().value;
         srv.autoindex = (val == "on");
         expect(TOKEN_SEMICOLON, "Expected ';' after autoindex");
+    }
+    else if (key == "cgi-bin")
+    {
+        srv.cgi_bin = get().value;
+        expect(TOKEN_SEMICOLON, "Expected ';' after cgi-bin");
     }
     else
         throw std::runtime_error("Unknown directive: " + key);
@@ -216,25 +228,36 @@ void ConfigParser::parseLocationDirective(LocationConfig &loc)
     if (key == "root")
     {
         loc.root = get().value;
+        loc.is_alias = true; // For this project, root in location is treated as alias
         expect(TOKEN_SEMICOLON, "Expected ';' after root");
+    }
+    else if (key == "alias")
+    {
+        loc.root = get().value;
+        loc.is_alias = true;
+        expect(TOKEN_SEMICOLON, "Expected ';' after alias");
     }
     else if (key == "autoindex")
     {
         loc.autoindex = (get().value == "on");
         expect(TOKEN_SEMICOLON, "Expected ';' after autoindex");
     }
-    else if (key == "allow_methods")
+    else if (key == "index")
     {
-        // Example: allow_methods GET POST DELETE;
+        loc.index = get().value;
+        expect(TOKEN_SEMICOLON, "Expected ';' after index");
+    }
+    else if (key == "allow_methods" || key == "limit_except")
+    {
         while (peek().type == TOKEN_IDENT)
             loc.methods.push_back(get().value);
 
-        expect(TOKEN_SEMICOLON, "Expected ';' after allow_methods");
+        expect(TOKEN_SEMICOLON, "Expected ';' after methods");
     }
-    else if (key == "upload_store")
+    else if (key == "upload_store" || key == "upload")
     {
         loc.upload_store = get().value;
-        expect(TOKEN_SEMICOLON, "Expected ';' after upload_store");
+        expect(TOKEN_SEMICOLON, "Expected ';' after upload");
     }
     else if (key == "cgi_extension")
     {
@@ -245,6 +268,46 @@ void ConfigParser::parseLocationDirective(LocationConfig &loc)
     {
         loc.cgi_path = get().value;
         expect(TOKEN_SEMICOLON, "Expected ';' after cgi_path");
+    }
+    else if (key == "cgi")
+    {
+        // cgi extension handler_path
+        loc.cgi_extension = get().value;
+        loc.cgi_path = get().value;
+        expect(TOKEN_SEMICOLON, "Expected ';' after cgi");
+    }
+    else if (key == "auth_basic")
+    {
+        loc.auth_basic = get().value;
+        expect(TOKEN_SEMICOLON, "Expected ';' after auth_basic");
+    }
+    else if (key == "auth_basic_user_file")
+    {
+        loc.auth_basic_user_file = get().value;
+        expect(TOKEN_SEMICOLON, "Expected ';' after auth_basic_user_file");
+    }
+    else if (key == "cgi-bin")
+    {
+        // ignore in server block too or add to server config
+        get();
+        expect(TOKEN_SEMICOLON, "Expected ';' after cgi-bin");
+    }
+    else if (key == "client_max_body_size")
+    {
+        Token t1 = get();
+        std::string val = t1.value;
+        if (peek().type == TOKEN_IDENT && (peek().value == "K" || peek().value == "k" || peek().value == "M" || peek().value == "m" || peek().value == "G" || peek().value == "g"))
+        {
+            Token suffix = get();
+            val += suffix.value;
+        }
+        size_t multiplier = 1;
+        char last = val[val.size() - 1];
+        if (last == 'K' || last == 'k') { multiplier = 1024; val = val.substr(0, val.size() - 1); }
+        else if (last == 'M' || last == 'm') { multiplier = 1024 * 1024; val = val.substr(0, val.size() - 1); }
+        else if (last == 'G' || last == 'g') { multiplier = 1024 * 1024 * 1024; val = val.substr(0, val.size() - 1); }
+        loc.client_max_body_size = StringUtils::toSizeT(val) * multiplier;
+        expect(TOKEN_SEMICOLON, "Expected ';' after client_max_body_size");
     }
     else
         throw std::runtime_error("Unknown location directive: " + key);

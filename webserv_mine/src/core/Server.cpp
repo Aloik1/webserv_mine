@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <set>
 #include "../config/ConfigParser.hpp"
 
 
@@ -79,17 +80,32 @@ int Server::createListeningSocket(int port)
 
 void Server::start()
 {
+    std::map<int, int> portToSocket;
+    std::map<int, std::vector<ServerConfig> > socketToConfigs;
+
     for (size_t i = 0; i < _configs.size(); i++)
     {
         const ServerConfig &cfg = _configs[i];
 
         for (size_t j = 0; j < cfg.listen.size(); j++)
         {
-            int port = atoi(cfg.listen[j].c_str());
-            int sock = createListeningSocket(port);
-
-            if (sock >= 0)
-                _listeningSockets.push_back(sock);
+            int port = std::atoi(cfg.listen[j].c_str());
+            int sock;
+            if (portToSocket.find(port) == portToSocket.end())
+            {
+                sock = createListeningSocket(port);
+                if (sock >= 0)
+                {
+                    _listeningSockets.push_back(sock);
+                    portToSocket[port] = sock;
+                }
+                else continue;
+            }
+            else
+            {
+                sock = portToSocket[port];
+            }
+            socketToConfigs[sock].push_back(cfg);
         }
     }
 
@@ -101,7 +117,7 @@ void Server::start()
 
     std::cout << "Server started. Waiting for connections...\n";
 
-    EventLoop loop(_listeningSockets, _configs);
+    EventLoop loop(_listeningSockets, socketToConfigs);
     loop.run();
 }
 

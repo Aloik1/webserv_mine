@@ -25,6 +25,7 @@ struct ServerConfig {
     std::string root;
     std::string index;
     bool autoindex;
+    std::string cgi_bin;
 
     std::map<int, std::string> error_pages;
     size_t client_max_body_size;
@@ -32,7 +33,7 @@ struct ServerConfig {
     std::vector<LocationConfig> locations;
 
     ServerConfig()
-        : server_name(""), root("./www"), index("index.html"), autoindex(false), client_max_body_size(0)
+        : server_name(""), root("./www"), index("index.html"), autoindex(false), cgi_bin(""), client_max_body_size(0)
     {}
 
 };

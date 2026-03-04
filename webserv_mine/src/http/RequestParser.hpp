@@ -17,10 +17,12 @@
 #include "../config/ServerConfig.hpp"
 #include <string>
 
+#include "../core/Client.hpp"
+
 class RequestParser {
 	public:
 		RequestParser();
-		HttpRequest parse(const std::string &raw, const ServerConfig &config);
+		HttpRequest parse(const std::string &raw, const std::vector<ServerConfig> &eligibleConfigs, Client &c);
 };
 
 #endif

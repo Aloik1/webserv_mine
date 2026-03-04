@@ -40,3 +40,15 @@ std::string FileUtils::getExtension(const std::string &path)
         return "";
     return path.substr(dot);
 }
+
+std::string FileUtils::getLastModified(const std::string &path)
+{
+    struct stat st;
+    if (stat(path.c_str(), &st) != 0)
+        return "";
+
+    char buf[100];
+    struct tm tm = *gmtime(&st.st_mtime);
+    strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", &tm);
+    return std::string(buf);
+}

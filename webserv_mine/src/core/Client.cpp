@@ -13,12 +13,16 @@
 #include "Client.hpp"
 #include <unistd.h>
 
-Client::Client(int fd, const ServerConfig &conf)
+Client::Client(int fd, const std::vector<ServerConfig> &eligibleConfigs)
     : fd(fd),
       wantWrite(false),
-      config(conf),
+      configs(eligibleConfigs),
+      defaultConfig(eligibleConfigs[0]),
       keepAlive(false),
-      lastActivity(time(NULL))
+      lastActivity(time(NULL)),
+      headerParsed(false),
+      headerSize(0),
+      headerDelimiterLen(0)
 {}
 
 Client::~Client()

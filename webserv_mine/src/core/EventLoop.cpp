@@ -25,16 +25,9 @@
 #include <errno.h>
 #include <string.h>
 
-EventLoop::EventLoop(const std::vector<int> &listeningSockets, const std::vector<ServerConfig> &configs)
-    : _listeningSockets(listeningSockets), _configs(configs)
-{
-    // Map each listening socket to its corresponding server config
-    for (size_t i = 0; i < listeningSockets.size(); i++)
-    {
-        int sock = listeningSockets[i];
-        _socketToConfig[sock] = configs[i];
-    }
-}
+EventLoop::EventLoop(const std::vector<int> &listeningSockets, const std::map<int, std::vector<ServerConfig> > &socketToConfigs)
+    : _listeningSockets(listeningSockets), _socketToConfigs(socketToConfigs)
+{}
 
 
 EventLoop::~EventLoop()
@@ -76,11 +69,11 @@ void EventLoop::run()
         for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end();)
         {
             Client* c = it->second;
-            if (now - c->lastActivity > 10)
+            if (now - c->lastActivity > 60)
             {
                 int fd = it->first;
+                ++it; // Move iterator before removing the client to avoid invalidation
                 removeClient(fd);
-                it = _clients.begin();
             }
             else
             {
@@ -111,11 +104,6 @@ void EventLoop::run()
             // Client socket
             if (fds[i].revents & POLLIN)
             {
-                char tmp;
-                int peek = recv(fd, &tmp, 1, MSG_PEEK);
-                if (peek <= 0)
-                    continue; // no hay datos nuevos → no leer
-
                 std::cout << "entering client read" << std::endl;
                 handleClientRead(fd);
             }
@@ -149,11 +137,11 @@ void EventLoop::acceptNewClient(int listenFd)
     // Make non-blocking
     fcntl(clientFd, F_SETFL, O_NONBLOCK);
 
-    // Get the correct server config for this listening socket
-    const ServerConfig &conf = _socketToConfig[listenFd];
+    // Get the correct server configs for this listening socket
+    const std::vector<ServerConfig> &eligibleConfigs = _socketToConfigs.at(listenFd);
 
-    // Create client with the correct config
-    _clients[clientFd] = new Client(clientFd, conf);
+    // Create client with the correct configs
+    _clients[clientFd] = new Client(clientFd, eligibleConfigs);
 
     std::cout << "New client connected: " << clientFd << "\n";
 }
@@ -161,19 +149,19 @@ void EventLoop::acceptNewClient(int listenFd)
 
 void EventLoop::handleClientRead(int clientFd) 
 {
-    char buffer[4096];
+    char buffer[8192];
     int bytes = recv(clientFd, buffer, sizeof(buffer), 0);
 
     if (bytes < 0)
     {
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+            return;
         removeClient(clientFd);
         return;
     }
     if (bytes == 0)
     {
-        // el cliente no ha enviado nada nuevo,
-        // pero NO significa que quiera cerrar la conexión
-        //c->wantWrite = false;
+        removeClient(clientFd);
         return;
     }
 
@@ -181,68 +169,96 @@ void EventLoop::handleClientRead(int clientFd)
     c->readBuffer.append(buffer, bytes);
     c->lastActivity = time(NULL);
 
-    // Parse request with correct config
-    RequestParser parser;
-    HttpRequest req;
-
-    try
+    // Limit buffer size to prevent memory exhaustion
+    // 10MB (max body) + 16KB (headers/buffer room)
+    if (c->readBuffer.size() > c->defaultConfig.client_max_body_size + 16384)
     {
-        req = parser.parse(c->readBuffer, c->config);
-    }
-    catch (const HttpException &e)
-    {
-        // Build error response (e.g., 413 Payload Too Large)
+        std::cerr << "[ERROR] Client buffer exceeded maximum allowed size (" << c->readBuffer.size() << " bytes). Disconnecting.\n";
+        
         HttpResponse res;
-        res.status_code = e.code;
-        res.body = e.message;
+        res.status_code = 413;
+        res.body = "Payload Too Large";
         res.headers["Content-Length"] = StringUtils::toString(res.body.size());
-        res.headers["Content-Type"] = "text/plain";
-
+        res.headers["Connection"] = "close";
+        
         c->writeBuffer = res.serialize();
         c->wantWrite = true;
         c->readBuffer.clear();
+        c->keepAlive = false;
         return;
     }
-    
-    // --- KEEP ALIVE DETECTION ---
-    if (req.headers.count("Connection"))
+
+    std::cout << "[DEBUG] handleClientRead: read " << bytes << " bytes, total buffer size: " << c->readBuffer.size() << std::endl;
+
+    processRequests(c);
+}
+
+void EventLoop::processRequests(Client *c)
+{
+    RequestParser parser;
+    while (!c->readBuffer.empty())
     {
-        std::string conn = req.headers.at("Connection");
-        std::transform(conn.begin(), conn.end(), conn.begin(), ::tolower);
-        if (conn == "keep-alive")
-            c->keepAlive = true;
-        else
+        HttpRequest req;
+        try
+        {
+            req = parser.parse(c->readBuffer, c->configs, *c);
+        }
+        catch (const HttpException &e)
+        {
+            std::cout << "[DEBUG] HttpException caught: " << e.code << " " << e.message << std::endl;
+            HttpResponse res;
+            res.status_code = e.code;
+            res.body = e.message;
+            res.headers["Content-Length"] = StringUtils::toString(res.body.size());
+            res.headers["Content-Type"] = "text/plain";
+            res.headers["Connection"] = "close";
+
+            c->writeBuffer += res.serialize();
+            c->wantWrite = true;
             c->keepAlive = false;
+            c->readBuffer.clear();
+            return;
+        }
+
+        if (req.method.empty() || req.consumedBytes == 0)
+            break;
+
+        // Keep-Alive Detection
+        if (req.headers.count("connection"))
+        {
+            std::string conn = req.headers.at("connection");
+            std::transform(conn.begin(), conn.end(), conn.begin(), ::tolower);
+            c->keepAlive = (conn == "keep-alive");
+        }
+        else
+        {
+            c->keepAlive = true;
+        }
+
+        Router router(c->configs);
+        HttpResponse res;
+        try {
+            res = router.route(req);
+        } catch (const std::exception &e) {
+            std::cerr << "[ERROR] Exception in Router::route: " << e.what() << std::endl;
+            res.status_code = 500;
+            res.body = "Internal Server Error";
+            res.headers["Content-Length"] = StringUtils::toString(res.body.size());
+            res.headers["Connection"] = "close";
+        }
+        
+        if (req.method == "HEAD")
+            res.body.clear();
+
+        c->writeBuffer += res.serialize();
+        c->wantWrite = true;
+        c->readBuffer.erase(0, req.consumedBytes);
+        c->headerParsed = false;
+        c->headerSize = 0;
+
+        if (!c->keepAlive)
+            break;
     }
-    else
-    {
-        c->keepAlive = true;
-    }
-    c->lastActivity = time(NULL);
-    // --- END KEEP ALIVE DETECTION ---
-    
-    // Request incomplete → wait for more data
-    if (req.method.empty())
-        return;
-
-    // Route using correct config
-    Router router(_configs);
-    HttpResponse res = router.route(req);//, c->config);
-
-    if (req.method == "HEAD")
-    {
-        res.body.clear();
-    }
-
-    std::string raw = res.serialize();
-
-    std::cout << "=== ROUTER RESPONSE BEGIN ===\n";
-    std::cout << raw << "\n";
-    std::cout << "=== ROUTER RESPONSE END ===\n";
-
-    c->writeBuffer = raw;
-    c->wantWrite = true;
-    c->readBuffer.clear();
 }
 // ...
 
@@ -293,7 +309,6 @@ void EventLoop::handleClientWrite(int clientFd)
         }
         else
         {
-            c->readBuffer.clear();
             c->lastActivity = time(NULL);
         }
     }

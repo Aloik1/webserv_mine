@@ -87,7 +87,7 @@ Token Tokenizer::readIdentOrKeyword()
 	tok.col  = _col;
 
 	std::string s;
-	while (!eof() && (std::isalnum(peek()) || peek() == '_' || peek() == '.'))
+	while (!eof() && (std::isalnum(peek()) || peek() == '_' || peek() == '.' || peek() == '/' || peek() == '-' || peek() == ':'))
 		s += get();
 	tok.value = s;
 	return tok;

@@ -19,7 +19,8 @@
 #include "../config/LocationConfig.hpp"
 #include <string>
 
-class Router {
+class Router
+{
 	public:
 		Router(const std::vector<ServerConfig> &servers);
 		HttpResponse route(const HttpRequest &req);

@@ -15,7 +15,8 @@
 
 #include <string>
 
-namespace FileUtils {
+namespace FileUtils
+{
     bool exists(const std::string &path);
     std::string readFile(const std::string &path);
     std::string getExtension(const std::string &path);

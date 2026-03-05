@@ -16,7 +16,8 @@
 #include <string>
 #include <map>
 
-class HttpResponse {
+class HttpResponse
+{
 	public:
 		int status_code;
 		std::map<std::string, std::string> headers;

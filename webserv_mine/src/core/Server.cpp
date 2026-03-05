@@ -70,11 +70,11 @@ int Server::createListeningSocket(int port)
     }
     if (listen(sockfd, 128) < 0)
     {
-        std::cerr << "listen() failed\n";
+        std::cerr << "[ERROR] listen() failed" << std::endl;
         close(sockfd);
         return -1;
     }
-    std::cout << "Listening on port " << port << "...\n";
+    std::cout << "[INFO] Listening on port " << port << std::endl;
     return sockfd;
 }
 
@@ -111,11 +111,11 @@ void Server::start()
 
     if (_listeningSockets.empty())
     {
-        std::cerr << "No valid listening sockets created\n";
+        std::cerr << "[ERROR] No valid listening sockets created" << std::endl;
         return;
     }
 
-    std::cout << "Server started. Waiting for connections...\n";
+    std::cout << "[INFO] WebServ started. Waiting for connections..." << std::endl;
 
     EventLoop loop(_listeningSockets, socketToConfigs);
     loop.run();

@@ -24,7 +24,8 @@ std::string HttpResponse::serialize() const
 
     ss << "HTTP/1.1 " << status_code << " ";
 
-    switch (status_code) {
+    switch (status_code)
+    {
         case 200: ss << "OK"; break;
         case 201: ss << "Created"; break;
         case 202: ss << "Accepted"; break;
@@ -50,7 +51,8 @@ std::string HttpResponse::serialize() const
     if (headers.find("Server") == headers.end())
         ss << "Server: webserv/1.0\r\n";
     
-    if (headers.find("Date") == headers.end()) {
+    if (headers.find("Date") == headers.end())
+    {
         char buf[100];
         time_t now = time(0);
         struct tm tm = *gmtime(&now);

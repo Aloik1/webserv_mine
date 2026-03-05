@@ -19,7 +19,8 @@
 
 class Client;
 
-class EventLoop {
+class EventLoop
+{
 	public:
 		EventLoop(const std::vector<int> &listeningSockets, const std::map<int, std::vector<ServerConfig> > &socketToConfigs);
 		~EventLoop();

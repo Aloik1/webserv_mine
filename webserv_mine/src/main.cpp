@@ -81,9 +81,13 @@ int main(int argc, char **argv)
         {
             std::cout << "Server " << i << ":\n";
             for (size_t j = 0; j < servers[i].listen.size(); j++)
+            {
                 std::cout << "  listen: " << servers[i].listen[j] << "\n";
+            }
             for (size_t j = 0; j < servers[i].locations.size(); j++)
+            {
                 std::cout << "  location: " << servers[i].locations[j].path << "\n";
+            }
         }
 
         // Start the server using the parsed config

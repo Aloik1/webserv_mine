@@ -19,7 +19,8 @@
 
 #include "LocationConfig.hpp"
 
-struct ServerConfig {
+struct ServerConfig
+{
     std::vector<std::string> listen;
     std::string server_name;
     std::string root;

@@ -33,7 +33,11 @@ std::string CgiHandler::execute(const std::string &script, const HttpRequest &re
 
     pid_t pid = fork();
 
-    if (pid == 0) {
+    if (pid > 0)
+        std::cout << "[DEBUG] Forked CGI process (PID: " << pid << ")" << std::endl;
+
+    if (pid == 0)
+    {
         // CHILD
         dup2(inPipe[0], STDIN_FILENO);
         dup2(outPipe[1], STDOUT_FILENO);
@@ -142,9 +146,6 @@ std::string CgiHandler::execute(const std::string &script, const HttpRequest &re
     close(outPipe[0]);
     waitpid(pid, NULL, 0);
     
-    std::cout << "\n===== CGI RAW OUTPUT BEGIN =====\n";
-    std::cout << output << "\n";
-    std::cout << "===== CGI RAW OUTPUT END =====\n\n";
 
     return output;
 }

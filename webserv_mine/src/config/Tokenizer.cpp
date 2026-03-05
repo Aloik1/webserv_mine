@@ -126,7 +126,8 @@ Token Tokenizer::readString()
 	return tok;
 }
 
-std::vector<Token> Tokenizer::tokenize() {
+std::vector<Token> Tokenizer::tokenize()
+{
 	std::vector<Token> tokens;
 
 	while (!eof())

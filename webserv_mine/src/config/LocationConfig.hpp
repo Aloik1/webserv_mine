@@ -16,7 +16,8 @@
 #include <string>
 #include <vector>
 
-struct LocationConfig {
+struct LocationConfig
+{
 	std::string path;
 	std::string root;
 	std::string index;

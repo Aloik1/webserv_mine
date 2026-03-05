@@ -18,7 +18,8 @@
 #include "Tokenizer.hpp"
 #include "ServerConfig.hpp"
 
-class ConfigParser {
+class ConfigParser
+{
 	public:
 		ConfigParser();
 		~ConfigParser();

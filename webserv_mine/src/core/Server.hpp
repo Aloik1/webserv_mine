@@ -18,7 +18,8 @@
 #include <map>
 #include "../config/ConfigParser.hpp"
 
-class Server {
+class Server
+{
 	public:
 		Server(const std::vector<ServerConfig> &configs);
 		~Server();

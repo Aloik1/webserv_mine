@@ -16,7 +16,8 @@
 #include <string>
 #include "../config/ServerConfig.hpp"
 
-class Client {
+class Client
+{
 	public:
 		int fd;
 		std::string readBuffer;

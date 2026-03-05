@@ -15,7 +15,8 @@
 
 #include <string>
 
-namespace MimeTypes {
+namespace MimeTypes
+{
     std::string get(const std::string &ext);
 }
 

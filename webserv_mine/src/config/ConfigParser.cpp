@@ -62,7 +62,8 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &path)
 
     std::vector<ServerConfig> servers;
 
-    while (peek().type != TOKEN_END) {
+    while (peek().type != TOKEN_END)
+    {
         if (peek().type != TOKEN_IDENT || peek().value != "server")
             throw std::runtime_error("Expected 'server' at line " + StringUtils::toString(peek().line));
 
@@ -119,9 +120,6 @@ void ConfigParser::parseServerDirective(ServerConfig &srv)
         Token t1 = get();
         std::string val = t1.value;
 
-        // DEBUG
-        std::cout << "[DEBUG] token1: '" << val << "' type=" << t1.type << "\n";
-
         // Check if next token is a suffix (K/M/G)
         if (peek().type == TOKEN_IDENT &&
             (peek().value == "K" || peek().value == "k" ||
@@ -130,35 +128,31 @@ void ConfigParser::parseServerDirective(ServerConfig &srv)
         {
             Token suffix = get();
             val += suffix.value; // append suffix
-            std::cout << "[DEBUG] token2 (suffix): '" << suffix.value << "'\n";
         }
 
         // Now val is guaranteed to be like "100", "100M", "100K", etc.
-        std::cout << "[DEBUG] combined value: '" << val << "'\n";
 
         // Detect suffix
         size_t multiplier = 1;
         char last = val[val.size() - 1];
 
-        if (last == 'K' || last == 'k') {
+        if (last == 'K' || last == 'k')
+        {
             multiplier = 1024;
             val = val.substr(0, val.size() - 1);
         }
-        else if (last == 'M' || last == 'm') {
+        else if (last == 'M' || last == 'm')
+        {
             multiplier = 1024 * 1024;
             val = val.substr(0, val.size() - 1);
         }
-        else if (last == 'G' || last == 'g') {
+        else if (last == 'G' || last == 'g')
+        {
             multiplier = 1024 * 1024 * 1024;
             val = val.substr(0, val.size() - 1);
         }
 
-        std::cout << "[DEBUG] numeric part: '" << val << "'\n";
-
         srv.client_max_body_size = StringUtils::toSizeT(val) * multiplier;
-
-        std::cout << "[DEBUG] final client_max_body_size = "
-                << srv.client_max_body_size << "\n";
 
         expect(TOKEN_SEMICOLON, "Expected ';' after client_max_body_size");
     }
@@ -303,9 +297,21 @@ void ConfigParser::parseLocationDirective(LocationConfig &loc)
         }
         size_t multiplier = 1;
         char last = val[val.size() - 1];
-        if (last == 'K' || last == 'k') { multiplier = 1024; val = val.substr(0, val.size() - 1); }
-        else if (last == 'M' || last == 'm') { multiplier = 1024 * 1024; val = val.substr(0, val.size() - 1); }
-        else if (last == 'G' || last == 'g') { multiplier = 1024 * 1024 * 1024; val = val.substr(0, val.size() - 1); }
+        if (last == 'K' || last == 'k')
+        {
+            multiplier = 1024;
+            val = val.substr(0, val.size() - 1);
+        }
+        else if (last == 'M' || last == 'm')
+        {
+            multiplier = 1024 * 1024;
+            val = val.substr(0, val.size() - 1);
+        }
+        else if (last == 'G' || last == 'g')
+        {
+            multiplier = 1024 * 1024 * 1024;
+            val = val.substr(0, val.size() - 1);
+        }
         loc.client_max_body_size = StringUtils::toSizeT(val) * multiplier;
         expect(TOKEN_SEMICOLON, "Expected ';' after client_max_body_size");
     }

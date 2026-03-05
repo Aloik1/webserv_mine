@@ -16,7 +16,8 @@
 #include <string>
 #include <vector>
 
-namespace StringUtils {
+namespace StringUtils
+{
     std::vector<std::string> split(const std::string &s, char delim);
     std::string trim(const std::string &s);
     std::string toString(size_t n);

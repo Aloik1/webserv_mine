@@ -31,22 +31,30 @@ HttpRequest RequestParser::parse(const std::string &raw, const std::vector<Serve
     size_t headerEnd = std::string::npos;
     size_t delimiterLen = 0;
 
-    if (c.headerParsed) {
+    if (c.headerParsed)
+    {
         headerEnd = c.headerSize;
         delimiterLen = c.headerDelimiterLen;
-    } else {
+    }
+    else
+    {
         headerEnd = raw.find("\r\n\r\n");
-        if (headerEnd == std::string::npos) {
+        if (headerEnd == std::string::npos)
+        {
             headerEnd = raw.find("\n\n");
             delimiterLen = 2;
-        } else {
+        }
+        else
+        {
             delimiterLen = 4;
         }
 
-        if (headerEnd != std::string::npos) {
+        if (headerEnd != std::string::npos)
+        {
             c.headerParsed = true;
             c.headerSize = headerEnd;
             c.headerDelimiterLen = delimiterLen;
+            std::cout << "[DEBUG] Header parsed (fd " << c.fd << ")" << std::endl;
         }
     }
 
@@ -149,8 +157,10 @@ HttpRequest RequestParser::parse(const std::string &raw, const std::vector<Serve
         host = host.substr(0, hostColon);
 
     const ServerConfig *config = &eligibleConfigs[0];
-    for (size_t i = 0; i < eligibleConfigs.size(); ++i) {
-        if (eligibleConfigs[i].server_name == host) {
+    for (size_t i = 0; i < eligibleConfigs.size(); ++i)
+    {
+        if (eligibleConfigs[i].server_name == host)
+        {
             config = &eligibleConfigs[i];
             break;
         }
@@ -160,10 +170,13 @@ HttpRequest RequestParser::parse(const std::string &raw, const std::vector<Serve
     size_t maxBodySize = config->client_max_body_size;
     const LocationConfig *bestLoc = NULL;
     size_t bestLen = 0;
-    for (size_t i = 0; i < config->locations.size(); ++i) {
+    for (size_t i = 0; i < config->locations.size(); ++i)
+    {
         const LocationConfig &loc = config->locations[i];
-        if (req.path.compare(0, loc.path.size(), loc.path) == 0) {
-            if (loc.path.size() > bestLen) {
+        if (req.path.compare(0, loc.path.size(), loc.path) == 0)
+        {
+            if (loc.path.size() > bestLen)
+            {
                 bestLoc = &loc;
                 bestLen = loc.path.size();
             }
@@ -186,6 +199,7 @@ HttpRequest RequestParser::parse(const std::string &raw, const std::vector<Serve
             std::string sizeStr = raw.substr(pos, endOfSize - pos);
             char *ptr;
             long chunkSize = strtol(sizeStr.c_str(), &ptr, 16);
+            std::cout << "[DEBUG] Chunk received: size " << chunkSize << " (fd " << c.fd << ")" << std::endl;
             if (ptr != sizeStr.c_str() + sizeStr.size())
             {
                  // Check if it's a chunk extension (ignored for simplicity)

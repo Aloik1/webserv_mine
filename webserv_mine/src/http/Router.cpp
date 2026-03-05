@@ -28,20 +28,16 @@ Router::Router(const std::vector<ServerConfig> &servers)
 {}
 
 
-HttpResponse Router::route(const HttpRequest &req)//, const ServerConfig &config)
+HttpResponse Router::route(const HttpRequest &req)
 {
     HttpResponse res;
     const ServerConfig &config = selectServer(req);
-    std::cout << "[DEBUG] route(): req.path = '" << req.path << "'\n";
-    std::cout << "[DEBUG] req.method = '" << req.method << "'" << std::endl;
     res.is_head = (req.method == "HEAD");
 
 
 
     // 1. Find matching location    
     const LocationConfig *loc = matchLocation(req.path, config);
-    std::cout << "[DEBUG] matchLocation('" << req.path << "') → "
-          << (loc ? loc->path : "NULL") << "\n";
 
 
     // 1.1 Auth check
@@ -117,7 +113,6 @@ HttpResponse Router::route(const HttpRequest &req)//, const ServerConfig &config
     // DELETE handling
     if (req.method == "DELETE")
     {
-        std::cout << "[DEBUG] = Entering DELETE handling" << std::endl;
         return handleDelete(fsPath, loc, config);
     }
 
@@ -136,7 +131,6 @@ HttpResponse Router::route(const HttpRequest &req)//, const ServerConfig &config
         std::string ext = (dot != std::string::npos) ? fsPath.substr(dot + 1) : "";
         if (ext == loc->cgi_extension || ("." + ext) == loc->cgi_extension)
         {
-            std::cout << "[DEBUG] Entering CGI handling\n";
             std::string interpreter = loc->cgi_path;
             
             // If it's relative, try looking in cgi_bin
@@ -150,6 +144,7 @@ HttpResponse Router::route(const HttpRequest &req)//, const ServerConfig &config
             }
 
             CgiHandler cgi;
+            std::cout << "[DEBUG] Executing CGI: " << fsPath << " with interpreter: " << interpreter << std::endl;
             std::string output = cgi.execute(fsPath, req, interpreter);
             return parseCgiResponse(output, config);
         }
@@ -160,7 +155,6 @@ HttpResponse Router::route(const HttpRequest &req)//, const ServerConfig &config
     {
         if (loc && !loc->upload_store.empty())
         {
-            std::cout << "[DEBUG] Entering POST upload handling\n";
             return handlePost(req, loc, config);
         }
         else if (loc && !loc->cgi_path.empty())
@@ -210,6 +204,7 @@ HttpResponse Router::route(const HttpRequest &req)//, const ServerConfig &config
 
 HttpResponse Router::serveFile(const std::string &path, const ServerConfig &config)
 {
+    std::cout << "[DEBUG] Serving static file: " << path << std::endl;
     HttpResponse res;
 
     if (!FileUtils::exists(path))
@@ -221,15 +216,12 @@ HttpResponse Router::serveFile(const std::string &path, const ServerConfig &conf
 
     std::string mime = "application/octet-stream";
     std::vector<std::string> parts = StringUtils::split(path, '.');
-    std::cout << "[DEBUG] serveFile('" << path << "') parts size=" << parts.size() << "\n";
     for (int i = (int)parts.size() - 1; i >= 0; --i)
     {
-        std::cout << "[DEBUG] Checking extension: ." << parts[i] << "\n";
         std::string m = MimeTypes::get("." + parts[i]);
         if (m != "application/octet-stream")
         {
             mime = m;
-            std::cout << "[DEBUG] Found MIME: " << mime << "\n";
             break;
         }
     }
@@ -337,14 +329,13 @@ const LocationConfig *Router::matchLocation(const std::string &path, const Serve
             }
         }
     }
-    std::cout << "[DEBUG] matchLocation('" << path << "') → "
-        << (best ? best->path : "NONE") << std::endl;
 
     return best;
 }
 
 HttpResponse Router::handleDelete(const std::string &fsPath, const LocationConfig *loc, const ServerConfig &config)
 {
+    std::cout << "[DEBUG] Deleting file: " << fsPath << std::endl;
     (void)loc;
     HttpResponse res;
     struct stat st;
@@ -397,7 +388,7 @@ HttpResponse Router::handlePut(const HttpRequest &req, const std::string &fsPath
     }
 
     bool existed = FileUtils::exists(targetPath);
-    std::cout << "[DEBUG] PUT to '" << targetPath << "' (existed=" << existed << ")\n";
+    std::cout << "[DEBUG] PUT to: " << targetPath << " (existed=" << existed << ")" << std::endl;
     
     // Ensure parent directory exists
     size_t lastSlash = targetPath.find_last_of('/');

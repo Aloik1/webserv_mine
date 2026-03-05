@@ -44,7 +44,8 @@ void EventLoop::run()
         fds.clear();
 
         // Add listening sockets
-        for (size_t i = 0; i < _listeningSockets.size(); i++) {
+        for (size_t i = 0; i < _listeningSockets.size(); i++)
+        {
             pollfd p;
             p.fd = _listeningSockets[i];
             p.events = POLLIN;
@@ -90,7 +91,8 @@ void EventLoop::run()
         }
 
         // Process events
-        for (size_t i = 0; i < fds.size(); i++) {
+        for (size_t i = 0; i < fds.size(); i++)
+        {
             int fd = fds[i].fd;
 
             // Listening socket → accept new client
@@ -104,14 +106,12 @@ void EventLoop::run()
             // Client socket
             if (fds[i].revents & POLLIN)
             {
-                std::cout << "entering client read" << std::endl;
                 handleClientRead(fd);
             }
 
 
             if (_clients.find(fd) != _clients.end() && (fds[i].revents & POLLOUT))
             {
-                std::cout << "entering client write" << std::endl;
                 handleClientWrite(fd);
             }
 
@@ -120,7 +120,6 @@ void EventLoop::run()
             // but we can still write the response.
             if (fds[i].revents & POLLERR)
             {
-                std::cout << "removing client" << std::endl;
                 removeClient(fd);
             }
 
@@ -143,7 +142,7 @@ void EventLoop::acceptNewClient(int listenFd)
     // Create client with the correct configs
     _clients[clientFd] = new Client(clientFd, eligibleConfigs);
 
-    std::cout << "New client connected: " << clientFd << "\n";
+    std::cout << "[INFO] New client connected on fd " << clientFd << std::endl;
 }
 
 
@@ -188,8 +187,6 @@ void EventLoop::handleClientRead(int clientFd)
         return;
     }
 
-    std::cout << "[DEBUG] handleClientRead: read " << bytes << " bytes, total buffer size: " << c->readBuffer.size() << std::endl;
-
     processRequests(c);
 }
 
@@ -205,7 +202,6 @@ void EventLoop::processRequests(Client *c)
         }
         catch (const HttpException &e)
         {
-            std::cout << "[DEBUG] HttpException caught: " << e.code << " " << e.message << std::endl;
             HttpResponse res;
             res.status_code = e.code;
             res.body = e.message;
@@ -223,6 +219,8 @@ void EventLoop::processRequests(Client *c)
         if (req.method.empty() || req.consumedBytes == 0)
             break;
 
+        std::cout << "[INFO] Request: " << req.method << " " << req.path << " (fd " << c->fd << ")" << std::endl;
+
         // Keep-Alive Detection
         if (req.headers.count("connection"))
         {
@@ -237,19 +235,20 @@ void EventLoop::processRequests(Client *c)
 
         Router router(c->configs);
         HttpResponse res;
-        try {
+        try
+        {
             res = router.route(req);
-        } catch (const std::exception &e) {
-            std::cerr << "[ERROR] Exception in Router::route: " << e.what() << std::endl;
+        }
+        catch (const std::exception &e)
+        {
             res.status_code = 500;
             res.body = "Internal Server Error";
             res.headers["Content-Length"] = StringUtils::toString(res.body.size());
             res.headers["Connection"] = "close";
         }
         
-        if (req.method == "HEAD")
-            res.body.clear();
-
+        std::cout << "[INFO] Response: " << res.status_code << " (fd " << c->fd << ")" << std::endl;
+        
         c->writeBuffer += res.serialize();
         c->wantWrite = true;
         c->readBuffer.erase(0, req.consumedBytes);
@@ -260,18 +259,16 @@ void EventLoop::processRequests(Client *c)
             break;
     }
 }
-// ...
 
 void EventLoop::handleClientWrite(int clientFd)
 {
     Client *c = _clients[clientFd];
 
-    if (c->writeBuffer.empty()) {
+    if (c->writeBuffer.empty())
+    {
         c->wantWrite = false;
         return;
     }
-
-    std::cout << "[WRITE] trying to send " << c->writeBuffer.size() << " bytes\n";
 
     ssize_t bytes = send( clientFd, c->writeBuffer.c_str(), c->writeBuffer.size(),
     #ifdef MSG_NOSIGNAL
@@ -283,16 +280,12 @@ void EventLoop::handleClientWrite(int clientFd)
     c->lastActivity = time(NULL);
     if (bytes <= 0)
     {
-        std::cout << "[WRITE] send() failed or peer closed\n";
         removeClient(clientFd);
         return;
     }
 
-
-    // Success — print only the bytes sent
-    std::cout << "[WRITE] send() = " << bytes << "\n";
-
-    if (bytes == 0) {
+    if (bytes == 0)
+    {
         // peer closed, nothing more to do
         removeClient(clientFd);
         return;
@@ -300,7 +293,6 @@ void EventLoop::handleClientWrite(int clientFd)
     c->writeBuffer.erase(0, bytes);
     if (c->writeBuffer.empty())
     {
-        std::cout << " [WRITE] all data sent\n";
         c->wantWrite = false;
 
         if (!c->keepAlive)
@@ -317,7 +309,7 @@ void EventLoop::handleClientWrite(int clientFd)
 
 void EventLoop::removeClient(int clientFd)
 {
-    std::cout << "Client disconnected: " << clientFd << "\n";
+    std::cout << "[INFO] Client disconnected on fd " << clientFd << std::endl;
 
     delete _clients[clientFd];
     _clients.erase(clientFd);

@@ -1,0 +1,734 @@
+Parsed 3 server blocks
+Server 0:
+  listen: 8080
+  location: /
+  location: /2/
+  location: /virtual/
+  location: /post
+  location: /put
+  location: /index/
+  location: /protected
+  location: /cgi
+Server 1:
+  listen: 8081
+Server 2:
+  listen: 8080
+  location: /auto
+[INFO] Listening on port 8080
+[INFO] Listening on port 8081
+[INFO] Server started. Waiting for connections...
+[INFO] New client connected on fd 5
+[INFO] Request: HEAD / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET /a (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (5 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET /virtual/a/ (Client 5)
+[INFO] Matched location: /virtual/
+[INFO] Response: 404 (9 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET /b (Client 5)
+[INFO] Matched location: /
+[DEBUG] No matching files found for b
+[INFO] Response: 404 (9 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET /doidjodoeijdosejfoejfseoifjseiofjsejfsejfesjfseofsejiseofj (Client 5)
+[INFO] Matched location: /
+[DEBUG] No matching files found for doidjodoeijdosejfoejfseoifjseiofjsejfsejfesjfseofsejiseofj
+[INFO] Response: 404 (9 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET /index/a/ (Client 5)
+[INFO] Matched location: /index/
+[INFO] Response: 200 (189 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET /2/ (Client 5)
+[INFO] Matched location: /2/
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET / (Client 5)
+[INFO] Response: 200 (11 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET /auto (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 404 (9 bytes)
+[INFO] New client connected on fd 6
+[INFO] Client disconnected: 5
+[INFO] Request: GET /auto (Client 6)
+[INFO] Matched location: /auto
+[INFO] Response: 200 (386 bytes)
+[INFO] Client disconnected: 6
+[INFO] New client connected on fd 5
+[INFO] Request: GET /a (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 200 (5 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: GET /auto/file (Client 5)
+[INFO] Matched location: /auto
+[DEBUG] Matching file found: file.en.html.utf-8
+[DEBUG] Matching file found: file.html.fr
+[DEBUG] Matching file found: file.html
+[DEBUG] Matching file found: file.en.html
+[DEBUG] bestFile picked: file.html.fr
+[INFO] Response: 200 (8 bytes)
+[INFO] New client connected on fd 6
+[INFO] Client disconnected: 5
+[INFO] Request: GET /auto/file (Client 6)
+[INFO] Matched location: /auto
+[DEBUG] Matching file found: file.en.html.utf-8
+[DEBUG] Matching file found: file.html.fr
+[DEBUG] Matching file found: file.html
+[DEBUG] Matching file found: file.en.html
+[DEBUG] bestFile picked: file.html.fr
+[INFO] Response: 200 (8 bytes)
+[INFO] New client connected on fd 5
+[INFO] Client disconnected: 6
+[INFO] Request: GET /auto/file (Client 5)
+[INFO] Matched location: /auto
+[DEBUG] Matching file found: file.en.html.utf-8
+[DEBUG] Matching file found: file.html.fr
+[DEBUG] Matching file found: file.html
+[DEBUG] Matching file found: file.en.html
+[DEBUG] No specific match for lang/charset, using fallback
+[DEBUG] bestFile picked: file.html
+[INFO] Response: 200 (5 bytes)
+[INFO] New client connected on fd 6
+[INFO] Client disconnected: 5
+[INFO] Request: GET /auto/file (Client 6)
+[INFO] Matched location: /auto
+[DEBUG] Matching file found: file.en.html.utf-8
+[DEBUG] Matching file found: file.html.fr
+[DEBUG] Matching file found: file.html
+[DEBUG] Matching file found: file.en.html
+[DEBUG] bestFile picked: file.en.html.utf-8
+[INFO] Response: 200 (14 bytes)
+[INFO] Client disconnected: 6
+[INFO] New client connected on fd 5
+[INFO] Request: PUT /put/long.txt (Client 5)
+[INFO] Matched location: /put
+[INFO] Response: 201 (0 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: POST /put/long.txt (Client 5)
+[INFO] Matched location: /put
+[INFO] Response: 200 (13 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: POST / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 405 (57 bytes)
+[INFO] New client connected on fd 6
+[INFO] Client disconnected: 5
+[INFO] Request: POST / (Client 6)
+[INFO] Matched location: /
+[INFO] Response: 405 (57 bytes)
+[INFO] Client disconnected: 6
+[INFO] New client connected on fd 5
+[INFO] Request: POST /post/post.html (Client 5)
+[INFO] Matched location: /post
+[DEBUG] POST to './tester/webserv_tester/www/tmp/post.html' (existed=0)
+[INFO] Response: 201 (0 bytes)
+[INFO] New client connected on fd 6
+[INFO] Request: POST /post/post.html (Client 6)
+[INFO] Matched location: /post
+[DEBUG] POST to './tester/webserv_tester/www/tmp/post.html' (existed=1)
+[INFO] Response: 200 (0 bytes)
+[INFO] Client disconnected: 5
+[INFO] Client disconnected: 6
+[INFO] New client connected on fd 5
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: POST /post/test.cgi (Client 5)
+[INFO] Matched location: /post
+[INFO] Executing CGI: ./tester/webserv_tester/www/test.cgi using ./tester/webserv_tester/cgi-bin/print_cgi
+[INFO] Response: 226 (377 bytes)
+[INFO] New client connected on fd 6
+[INFO] Client disconnected: 5
+[INFO] Request: GET /protected/print.cgi (Client 6)
+[INFO] Matched location: /protected
+[INFO] Executing CGI: ./tester/webserv_tester/www/protected/print.cgi using ./tester/webserv_tester/cgi-bin/print_cgi
+[INFO] Response: 226 (478 bytes)
+[INFO] New client connected on fd 5
+[INFO] Client disconnected: 6
+[INFO] Request: POST /post/print.cgi (Client 5)
+[INFO] Matched location: /post
+[INFO] Executing CGI: ./tester/webserv_tester/www/print.cgi using ./tester/webserv_tester/cgi-bin/print_cgi
+[INFO] Response: 226 (409 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: POST /post/print.cgi (Client 5)
+[INFO] Matched location: /post
+[INFO] Executing CGI: ./tester/webserv_tester/www/print.cgi using ./tester/webserv_tester/cgi-bin/print_cgi
+[INFO] Response: 226 (361 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: POST /post/print.cgi (Client 5)
+[INFO] Matched location: /post
+[INFO] Executing CGI: ./tester/webserv_tester/www/print.cgi using ./tester/webserv_tester/cgi-bin/print_cgi
+[INFO] Response: 226 (361 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: POST /post/print.cgi (Client 5)
+[INFO] Matched location: /post
+[INFO] Executing CGI: ./tester/webserv_tester/www/print.cgi using ./tester/webserv_tester/cgi-bin/print_cgi
+[INFO] Response: 226 (361 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: POST /post/print.cgi (Client 5)
+[INFO] Matched location: /post
+[INFO] Executing CGI: ./tester/webserv_tester/www/print.cgi using ./tester/webserv_tester/cgi-bin/print_cgi
+[INFO] Response: 226 (356 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: POST /post/print.cgi (Client 5)
+[INFO] Matched location: /post
+[INFO] Executing CGI: ./tester/webserv_tester/www/print.cgi using ./tester/webserv_tester/cgi-bin/print_cgi
+[INFO] Response: 226 (356 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: POST /post/print.cgi (Client 5)
+[INFO] Matched location: /post
+[INFO] Executing CGI: ./tester/webserv_tester/www/print.cgi using ./tester/webserv_tester/cgi-bin/print_cgi
+[INFO] Response: 226 (356 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: POST /post/print.cgi (Client 5)
+[INFO] Matched location: /post
+[INFO] Executing CGI: ./tester/webserv_tester/www/print.cgi using ./tester/webserv_tester/cgi-bin/print_cgi
+[INFO] Response: 226 (379 bytes)
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Client disconnected: 5
+[INFO] New client connected on fd 5
+[INFO] Request: PUT / (Client 5)
+[INFO] Matched location: /
+[INFO] Response: 405 (57 bytes)
+[INFO] New client connected on fd 6
+[INFO] Client disconnected: 5
+[INFO] Request: PUT /post/put.html (C

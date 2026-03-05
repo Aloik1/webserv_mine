@@ -16,7 +16,8 @@
 #include <string>
 #include "../http/HttpRequest.hpp"
 
-class CgiHandler {
+class CgiHandler
+{
 	public:
 		CgiHandler();
 		std::string execute(const std::string &script, const HttpRequest &req, const std::string &interpreter);

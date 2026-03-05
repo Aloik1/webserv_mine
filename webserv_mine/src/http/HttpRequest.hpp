@@ -16,15 +16,14 @@
 #include <string>
 #include <map>
 
-class HttpRequest {
+class HttpRequest
+{
 	public:
 		std::string method;
 		std::string path;
 		std::string version;
 		std::map<std::string, std::string> headers;
 		std::string body;
-		std::string cgi_path;
-		std::string cgi_extension;
 		std::string query;
 		size_t consumedBytes;
 

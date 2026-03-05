@@ -13,7 +13,8 @@
 #pragma once
 #include <string>
 
-class HttpException {
+class HttpException
+{
 public:
     int code;
     std::string message;

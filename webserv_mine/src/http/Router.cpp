@@ -124,6 +124,9 @@ HttpResponse Router::route(const HttpRequest &req)//, const ServerConfig &config
     // PUT handling
     if (req.method == "PUT")
     {
+        struct stat pst;
+        if (stat(fsPath.c_str(), &pst) == 0 && S_ISDIR(pst.st_mode))
+            return makeErrorResponse(405, "Method Not Allowed (PUT on directory)", config);
         return handlePut(req, fsPath, loc, config);
     }
 
@@ -163,11 +166,18 @@ HttpResponse Router::route(const HttpRequest &req)//, const ServerConfig &config
         else if (loc && !loc->cgi_path.empty())
         {
             // CGI handled above, if we are here it's likely not a CGI extension
-            return makeErrorResponse(405, "Method Not Allowed (Not a CGI or upload)", config);
+            // For now, let's allow it and return 200 if nothing else handled it
         }
         else
         {
-            return makeErrorResponse(405, "Method Not Allowed (POST requires upload_store or CGI)", config);
+             // Standard POST to a file or non-upload location
+             // If we reached here, the method is allowed (check above)
+             HttpResponse res;
+             res.status_code = 200;
+             res.body = "POST accepted";
+             res.headers["Content-Length"] = StringUtils::toString(res.body.size());
+             res.headers["Content-Type"] = "text/plain";
+             return res;
         }
     }
 
@@ -188,7 +198,7 @@ HttpResponse Router::route(const HttpRequest &req)//, const ServerConfig &config
     if (S_ISDIR(st.st_mode))
     {
         bool autoindex = loc ? loc->autoindex : config.autoindex;
-        std::string index = (loc && !loc->index.empty()) ? loc->index : config.index;
+        std::string index = (loc && !loc->index.empty()) ? loc->index : (loc ? "" : config.index);
 
         return serveDirectory(fsPath, path, index, autoindex, config);
     }

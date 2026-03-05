@@ -195,24 +195,37 @@ HttpRequest RequestParser::parse(const std::string &raw, const std::vector<Serve
 
             if (chunkSize == 0)
             {
-                // Last chunk: must be followed by CRLF and optional trailers
-                // For simplicity, we just look for CRLF CRLF
+                // Last chunk: must be followed by optional trailers and final CRLF CRLF
+                size_t trailerStart = endOfSize + 2;
                 size_t finalDelimiter = raw.find("\r\n\r\n", endOfSize);
                 if (finalDelimiter == std::string::npos)
                 {
-                    // Maybe just \n\n?
                     finalDelimiter = raw.find("\n\n", endOfSize);
                     if (finalDelimiter == std::string::npos)
                         return HttpRequest(); // Incomplete
-                    
-                    req.body = body;
-                    req.consumedBytes = finalDelimiter + 2;
                 }
-                else
+
+                if (finalDelimiter > trailerStart)
                 {
-                    req.body = body;
-                    req.consumedBytes = finalDelimiter + 4;
+                    std::string trailers = raw.substr(trailerStart, finalDelimiter - trailerStart);
+                    std::istringstream ts(trailers);
+                    std::string tline;
+                    while (std::getline(ts, tline))
+                    {
+                        tline = StringUtils::trim(tline);
+                        if (tline.empty()) continue;
+                        size_t tcolon = tline.find(':');
+                        if (tcolon == std::string::npos)
+                             throw HttpException(400, "Bad Trailer");
+                        
+                        std::string tkey = StringUtils::toLower(StringUtils::trim(tline.substr(0, tcolon)));
+                        std::string tval = StringUtils::trim(tline.substr(tcolon + 1));
+                        req.headers[tkey] = tval;
+                    }
                 }
+
+                req.body = body;
+                req.consumedBytes = finalDelimiter + (raw.find("\r\n\r\n", endOfSize) != std::string::npos ? 4 : 2);
                 return req;
             }
 
